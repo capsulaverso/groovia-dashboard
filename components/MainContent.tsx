@@ -1,0 +1,115 @@
+
+import React from 'react';
+import { SCAN_CARDS_DATA, ANALYSIS_CARDS_DATA } from '../constants';
+import ScanCard from './ScanCard';
+
+const Header: React.FC = () => (
+    <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-4">
+            <h1 className="text-on-surface-light dark:text-on-surface-dark text-lg font-medium">Plugins</h1>
+            <span className="bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full">GPT 5</span>
+            <span className="bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full">DRIVE</span>
+            <span className="bg-surface-light dark:bg-surface-dark text-on-surface-secondary-light dark:text-on-surface-secondary-dark text-xs font-semibold px-3 py-1 rounded-full">SLIDE</span>
+        </div>
+        <div className="flex items-center gap-4">
+            <div className="relative w-full md:w-64">
+                <span className="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-secondary-light dark:text-on-surface-secondary-dark">search</span>
+                <input className="w-full bg-surface-light dark:bg-surface-dark border-none rounded-full pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary" placeholder="Buscar" type="text" />
+            </div>
+            <img alt="User avatar" className="w-10 h-10 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHehMaLwX5FDrppcqyfR8_WZ2Nh2sVdULdI2FxynCOHtkFjBCyNyqmKL77GMdcwtwovu7pGDDrvazKcqQY7LDSZRLGAr1fZzOckKhk0vHc3uSdVv3ENWda0G02NwtxD_0HlT0cklB0TOypj8Y8XMxiGNjUFgj-VnVxdpMRK4dQ1Qu1Nah36Qn5uCs4748X1evhK_jvpHUcb7ap4R2EdfN92zKp2p_PPRIJ2A5npIg7nGwkjAl80YD0iEc0J62Jvvz597HjREDWqDHZ" />
+        </div>
+    </header>
+);
+
+const MainContent: React.FC = () => {
+    return (
+        <main className="flex-1 p-6">
+            <Header />
+
+            <section className="mb-10">
+                <div className="flex items-center gap-4 mb-6">
+                    <h2 className="text-2xl font-semibold text-on-surface-light dark:text-on-surface-dark">O Diagnóstico Inteligente (SCAN)</h2>
+                    <span className="text-xs font-medium text-on-surface-secondary-light dark:text-on-surface-secondary-dark bg-surface-light dark:bg-surface-dark px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700">Ato 01</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {SCAN_CARDS_DATA.map(card => (
+                        <ScanCard key={card.id} title={card.title} description={card.description} progress={card.progress} />
+                    ))}
+                </div>
+            </section>
+
+            <section className="mb-10">
+                <h2 className="text-2xl font-semibold mb-6 text-on-surface-light dark:text-on-surface-dark">Histórico de Chat</h2>
+                <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-2xl">
+                    <h3 className="font-semibold text-on-surface-light dark:text-on-surface-dark">Dados de Sessão</h3>
+                    <p className="text-sm text-on-surface-secondary-light dark:text-on-surface-secondary-dark mb-4">O histórico das conversas, para que um utilizador possa continuar de onde parou.</p>
+                    <div className="flex items-center justify-end gap-2 text-on-surface-secondary-light dark:text-on-surface-secondary-dark">
+                        <button className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                            <span className="material-icons-outlined text-base">content_copy</span>
+                        </button>
+                        <button className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                            <span className="material-icons-outlined text-base">share</span>
+                        </button>
+                        <button className="p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                            <span className="material-icons-outlined text-base">download</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section className="mb-10">
+                <div className="flex items-center gap-4 mb-6">
+                    <h2 className="text-2xl font-semibold text-on-surface-light dark:text-on-surface-dark">Continue de onde parou</h2>
+                    <span className="text-xs font-medium text-on-surface-secondary-light dark:text-on-surface-secondary-dark bg-surface-light dark:bg-surface-dark px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700">Ato 02</span>
+                </div>
+                <div className="flex flex-col md:flex-row gap-6 items-start">
+                    <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-2xl shrink-0">
+                        <div className="flex items-center justify-end mb-4">
+                            <div className="relative inline-flex items-center justify-center bg-primary rounded-full w-7 h-7">
+                                <div className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full bg-white"></div>
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <div className="h-3.5 bg-green-400 rounded-full w-24"></div>
+                            <div className="h-3.5 bg-green-400 rounded-full w-24"></div>
+                            <div className="h-3.5 bg-green-400 rounded-full w-24"></div>
+                        </div>
+                    </div>
+                    <div className="flex-1">
+                        <h3 className="text-2xl font-bold mb-2 text-on-surface-light dark:text-on-surface-dark">Groovia Intelligence</h3>
+                        <p className="text-on-surface-secondary-light dark:text-on-surface-secondary-dark text-sm leading-relaxed mb-6">
+                            Criar uma robusta e completa estratégia corporativa que seja o ponto de partida para planejamento Tático e Operacional se guiarem. Aqui é interessante o Agente trabalhar em conjunto com o cliente em uma conversa fluída.
+                        </p>
+                    </div>
+                    <div className="bg-surface-light dark:bg-surface-dark p-4 rounded-2xl w-full md:w-auto">
+                        <h4 className="font-semibold text-sm mb-1 text-on-surface-light dark:text-on-surface-dark">Validação Estratégica</h4>
+                        <p className="text-xs text-on-surface-secondary-light dark:text-on-surface-secondary-dark mb-3">
+                            Garante que todos os elementos do projeto estejam alinhados. Requer aprovação do cliente para seguir.
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <button className="bg-primary text-white text-xs font-semibold px-4 py-2 rounded-lg">Começar</button>
+                            <button className="text-xs font-semibold text-on-surface-secondary-light dark:text-on-surface-secondary-dark px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">Mais tarde</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <div className="flex items-center gap-4 mb-6">
+                    <h2 className="text-2xl font-semibold text-on-surface-light dark:text-on-surface-dark">Análise à Estratégia</h2>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-on-surface-secondary-light dark:text-on-surface-secondary-dark bg-surface-light dark:bg-surface-dark px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700">Groov Intelligence</span>
+                        <span className="text-xs font-medium text-on-surface-secondary-light dark:text-on-surface-secondary-dark bg-surface-light dark:bg-surface-dark px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700">Strategy Flow</span>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                     {ANALYSIS_CARDS_DATA.map(card => (
+                        <ScanCard key={card.id} title={card.title} description={card.description} progress={card.progress} />
+                    ))}
+                </div>
+            </section>
+        </main>
+    );
+};
+
+export default MainContent;
