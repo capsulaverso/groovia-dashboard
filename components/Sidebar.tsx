@@ -97,7 +97,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
 
     return (
         <aside className="w-80 p-6 hidden lg:block">
-            <div className="bg-surface-light dark:bg-surface-dark w-full h-full rounded-2xl flex flex-col p-6 sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
+            <div className="bg-surface-light dark:bg-surface-dark w-full h-full rounded-2xl flex flex-col p-6 sticky top-6 max-h-[calc(100vh-3rem)]">
                 <div className="flex items-center justify-between mb-8">
                     <GrooviaLogo />
                     <ThemeSelector />
