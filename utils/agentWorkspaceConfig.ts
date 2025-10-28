@@ -47,23 +47,8 @@ export const generateWorkspaceConfig = (agent: AgentCardData): AgentWorkspaceCon
         }
     ];
 
-    // Histórico de conversas
-    const conversationHistory = [
-        {
-            id: 'conv-1',
-            title: 'Análise Inicial do Projeto',
-            lastMessage: 'Obrigado pela análise detalhada!',
-            timestamp: new Date('2024-10-25'),
-            messageCount: 15
-        },
-        {
-            id: 'conv-2',
-            title: 'Refinamento da Estratégia',
-            lastMessage: 'Vamos ajustar os OKRs conforme discutido',
-            timestamp: new Date('2024-10-26'),
-            messageCount: 23
-        }
-    ];
+    // Histórico de conversas específico por tipo de agente
+    const conversationHistory = getConversationHistory(agent.agentType);
 
     // Dados de contexto específicos por tipo
     const contextData = getContextData(agent.agentType, agent.contextProgress);
@@ -230,6 +215,154 @@ const getContextData = (agentType: string, contextProgress: number) => {
     };
 
     return [...baseContext, ...(specificContext[agentType as keyof typeof specificContext] || [])];
+};
+
+const getConversationHistory = (agentType: string) => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const twoDaysAgo = new Date(today);
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    const lastWeek = new Date(today);
+    lastWeek.setDate(lastWeek.getDate() - 7);
+    const twoWeeksAgo = new Date(today);
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+    const histories = {
+        'Agente de Diagnóstico': [
+            {
+                id: 'conv-diag-1',
+                title: 'Análise Completa do Negócio',
+                lastMessage: 'Perfeito! Vou revisar os insights sobre operações amanhã.',
+                timestamp: yesterday,
+                messageCount: 34
+            },
+            {
+                id: 'conv-diag-2',
+                title: 'Diagnóstico Financeiro Q3',
+                lastMessage: 'Os indicadores de liquidez precisam de atenção urgente.',
+                timestamp: lastWeek,
+                messageCount: 28
+            },
+            {
+                id: 'conv-diag-3',
+                title: 'Avaliação de Processos Internos',
+                lastMessage: 'Obrigado pelas sugestões de otimização!',
+                timestamp: twoWeeksAgo,
+                messageCount: 19
+            }
+        ],
+        'Agente de Pesquisa': [
+            {
+                id: 'conv-pesq-1',
+                title: 'Pesquisa de Mercado - Setor Tech',
+                lastMessage: 'Vamos aprofundar na análise de concorrentes B2B.',
+                timestamp: yesterday,
+                messageCount: 42
+            },
+            {
+                id: 'conv-pesq-2',
+                title: 'Definição do ICP Principal',
+                lastMessage: 'O perfil de empresas 50-200 funcionários está muito claro agora.',
+                timestamp: twoDaysAgo,
+                messageCount: 31
+            },
+            {
+                id: 'conv-pesq-3',
+                title: 'Tendências de Consumo 2025',
+                lastMessage: 'Preciso dos dados sobre comportamento mobile.',
+                timestamp: lastWeek,
+                messageCount: 25
+            }
+        ],
+        'Agente Estratégico': [
+            {
+                id: 'conv-estrat-1',
+                title: 'Planejamento Estratégico 2025-2027',
+                lastMessage: 'Os OKRs do pilar de Crescimento ficaram excelentes!',
+                timestamp: yesterday,
+                messageCount: 38
+            },
+            {
+                id: 'conv-estrat-2',
+                title: 'Análise SWOT Atualizada',
+                lastMessage: 'Vamos incluir as novas oportunidades de parcerias.',
+                timestamp: twoDaysAgo,
+                messageCount: 27
+            },
+            {
+                id: 'conv-estrat-3',
+                title: 'Roadmap de Expansão',
+                lastMessage: 'A estratégia go-to-market está bem definida.',
+                timestamp: lastWeek,
+                messageCount: 33
+            }
+        ],
+        'Agente Criativo': [
+            {
+                id: 'conv-creat-1',
+                title: 'Criação de Personas - Projeto Alpha',
+                lastMessage: 'A persona "Gestor Inovador" está perfeita para nosso ICP!',
+                timestamp: yesterday,
+                messageCount: 29
+            },
+            {
+                id: 'conv-creat-2',
+                title: 'Desenvolvimento de Brand Voice',
+                lastMessage: 'O tom de voz técnico mas acessível funcionou bem.',
+                timestamp: twoDaysAgo,
+                messageCount: 22
+            },
+            {
+                id: 'conv-creat-3',
+                title: 'Estratégia de Conteúdo Q4',
+                lastMessage: 'Vamos focar em cases de sucesso para próxima campanha.',
+                timestamp: lastWeek,
+                messageCount: 36
+            }
+        ],
+        'Agente de Branding': [
+            {
+                id: 'conv-brand-1',
+                title: 'Reposicionamento de Marca',
+                lastMessage: 'O novo posicionamento "Inovação Acessível" ressoou muito bem!',
+                timestamp: yesterday,
+                messageCount: 41
+            },
+            {
+                id: 'conv-brand-2',
+                title: 'Análise de Percepção de Marca',
+                lastMessage: 'Os insights sobre como o mercado nos vê foram reveladores.',
+                timestamp: twoDaysAgo,
+                messageCount: 30
+            },
+            {
+                id: 'conv-brand-3',
+                title: 'Guia de Identidade Visual',
+                lastMessage: 'A paleta de cores e tipografia estão aprovadas.',
+                timestamp: lastWeek,
+                messageCount: 24
+            }
+        ]
+    };
+
+    // Retornar histórico específico ou genérico
+    return histories[agentType as keyof typeof histories] || [
+        {
+            id: 'conv-gen-1',
+            title: 'Sessão de Trabalho Anterior',
+            lastMessage: 'Ótima conversa! Vamos continuar em breve.',
+            timestamp: yesterday,
+            messageCount: 18
+        },
+        {
+            id: 'conv-gen-2',
+            title: 'Análise Inicial',
+            lastMessage: 'Os próximos passos estão bem definidos.',
+            timestamp: lastWeek,
+            messageCount: 12
+        }
+    ];
 };
 
 const getHelpMessages = (agentType: string) => {

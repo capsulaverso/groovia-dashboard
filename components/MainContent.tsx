@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SCAN_CARDS_DATA, ANALYSIS_CARDS_DATA, AGENT_CARDS_DATA } from '../constants';
 import ScanCard from './ScanCard';
 import InstructionBox from './InstructionBox';
 import AgentCard from './AgentCard';
 import AgentWorkspace from './AgentWorkspace';
 import { generateWorkspaceConfig } from '../utils/agentWorkspaceConfig';
+import { populateExampleConversations } from '../utils/populateConversations';
 import type { AgentCardData, AgentWorkspaceConfig } from '../types';
 
 const Header: React.FC = () => (
@@ -28,6 +29,15 @@ const Header: React.FC = () => (
 
 const MainContent: React.FC = () => {
     const [activeWorkspace, setActiveWorkspace] = useState<AgentWorkspaceConfig | null>(null);
+
+    // Popular conversas de exemplo na primeira vez que o componente carregar
+    useEffect(() => {
+        const hasPopulated = localStorage.getItem('conversations_populated');
+        if (!hasPopulated) {
+            populateExampleConversations();
+            localStorage.setItem('conversations_populated', 'true');
+        }
+    }, []);
 
     const handleOpenWorkspace = (agent: AgentCardData) => {
         const config = generateWorkspaceConfig(agent);

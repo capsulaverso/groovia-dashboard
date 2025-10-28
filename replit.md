@@ -5,6 +5,7 @@ Groovia Dashboard is a modern, responsive dashboard application built with React
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
+Preferred language: Portuguese (PT-BR).
 
 # System Architecture
 
@@ -123,6 +124,13 @@ Custom color system defined in Tailwind config:
 - `getAgentWorkspaceConfig()`: Factory function generating complete workspace configuration based on agent type
 - Pre-configured settings for 7 agent types with unique internal codes (AGT-SC-001 through AGT-BR-007) for resource tracking
 - Each agent has customized functions, context data, help messages, and tooltips relevant to their specialty
+- `getConversationHistory()`: Generates agent-specific conversation history with realistic past sessions showing titles, last messages, timestamps, and message counts
+
+**Example Conversations System (utils/populateConversations.ts):**
+- Pre-populated conversation examples for demonstration purposes
+- Realistic message histories for key agent types (Diagnóstico, Pesquisa)
+- Automatically populated on first app load
+- Full conversation transcripts saved to localStorage for testing workspace conversation loading functionality
 
 **Data Flow:**
 - Dashboard: Constants → Component Props → Rendering via map functions
