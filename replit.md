@@ -28,6 +28,8 @@ The application follows a modular component-based architecture with clear separa
 - **ProgressRing**: SVG-based circular progress indicator using stroke-dashoffset animation
 - **InfoItem**: Informational card components for the right aside
 - **InstructionBox**: Reusable component for displaying instructions, guidance, warnings, and announcements throughout the system with closeable functionality and action buttons
+- **AgentCard**: Interactive card component with animated progress bars, circular context indicator, and clickable modal interaction for AI agent chat interfaces
+- **ChatModal**: Full-featured chat interface modal with message history, typing indicators, auto-scroll, and state reset functionality
 
 **State Management:**
 - Custom React hooks pattern (`useTheme`) for theme management
@@ -51,6 +53,9 @@ TypeScript interfaces defined in `types.ts`:
 - `ScanCardData`: Structure for plugin/agent card information
 - `InfoItemData`: Structure for informational items in right sidebar
 - `InstructionBoxProps`: Structure for instruction/notification boxes with variants (info, warning, success, error), action callbacks, and close functionality
+- `AgentCardData`: Structure for interactive agent cards with context progress, act phase, internal tracking codes, and agent type classification
+- `ChatMessage`: Message structure for chat interface with sender identification, content, and timestamps
+- `ChatModalProps`: Configuration for chat modal including agent metadata and modal state controls
 
 ## Build and Development
 

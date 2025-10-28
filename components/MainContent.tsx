@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { SCAN_CARDS_DATA, ANALYSIS_CARDS_DATA } from '../constants';
+import { SCAN_CARDS_DATA, ANALYSIS_CARDS_DATA, AGENT_CARDS_DATA } from '../constants';
 import ScanCard from './ScanCard';
 import InstructionBox from './InstructionBox';
+import AgentCard from './AgentCard';
 
 const Header: React.FC = () => (
     <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -106,6 +107,30 @@ const MainContent: React.FC = () => {
                         showCloseButton={true}
                         variant="info"
                     />
+                </div>
+            </section>
+
+            <section className="mb-10">
+                <div className="flex items-center gap-4 mb-6">
+                    <h2 className="text-2xl font-semibold text-on-surface-light dark:text-on-surface-dark">Agentes Interativos</h2>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-on-surface-secondary-light dark:text-on-surface-secondary-dark bg-surface-light dark:bg-surface-dark px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700">Chat AI</span>
+                        <span className="text-xs font-medium text-on-surface-secondary-light dark:text-on-surface-secondary-dark bg-surface-light dark:bg-surface-dark px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700">Gemini</span>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {AGENT_CARDS_DATA.map(agent => (
+                        <AgentCard 
+                            key={agent.id}
+                            title={agent.title}
+                            description={agent.description}
+                            contextProgress={agent.contextProgress}
+                            act={agent.act}
+                            internalCode={agent.internalCode}
+                            agentType={agent.agentType}
+                            onClick={() => console.log(`Abrindo agente: ${agent.title}`)}
+                        />
+                    ))}
                 </div>
             </section>
 
