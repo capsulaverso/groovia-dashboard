@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import { useApi, apiClient } from '../../hooks/useApi';
 
+interface Integration {
+  id: string;
+  name: string;
+  color: string;
+}
+
 interface Agent {
   id: number;
   internalCode: string;
   title: string;
   description: string;
   agentType: string;
-  integrations: string[];
+  integrations: Integration[] | any[];
   isActive: boolean;
   aiModel: string;
   aiProvider: string;
@@ -64,16 +70,22 @@ const AgentsControlPage: React.FC = () => {
     if (!editingAgent) return;
 
     try {
+      console.log('[handleSave] Salvando agente:', editingAgent);
+      
       if (editingAgent.id === 0) {
-        await apiClient.post('/agents', editingAgent);
+        const result = await apiClient.post('/agents', editingAgent);
+        console.log('[handleSave] Agente criado:', result);
       } else {
-        await apiClient.put(`/agents/${editingAgent.id}`, editingAgent);
+        const result = await apiClient.put(`/agents/${editingAgent.id}`, editingAgent);
+        console.log('[handleSave] Agente atualizado:', result);
       }
+      
       refetch();
       setShowModal(false);
       setEditingAgent(null);
     } catch (error) {
-      alert('Erro ao salvar agente');
+      console.error('[handleSave] Erro ao salvar:', error);
+      alert(`Erro ao salvar agente: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   };
 
