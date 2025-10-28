@@ -46,7 +46,7 @@ const InstructionBox: React.FC<InstructionBoxProps> = ({
     };
 
     return (
-        <div className={`${variantStyles[variant]} p-4 rounded-2xl w-full md:w-auto border relative`}>
+        <div className={`${variantStyles[variant]} p-4 rounded-2xl w-full md:w-auto border relative z-0`}>
             {showCloseButton && (
                 <button
                     onClick={handleClose}
