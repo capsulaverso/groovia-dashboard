@@ -2,6 +2,7 @@
 import React from 'react';
 import { SCAN_CARDS_DATA, ANALYSIS_CARDS_DATA } from '../constants';
 import ScanCard from './ScanCard';
+import InstructionBox from './InstructionBox';
 
 const Header: React.FC = () => (
     <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -81,16 +82,17 @@ const MainContent: React.FC = () => {
                             Criar uma robusta e completa estratégia corporativa que seja o ponto de partida para planejamento Tático e Operacional se guiarem. Aqui é interessante o Agente trabalhar em conjunto com o cliente em uma conversa fluída.
                         </p>
                     </div>
-                    <div className="bg-surface-light dark:bg-surface-dark p-4 rounded-2xl w-full md:w-auto">
-                        <h4 className="font-semibold text-sm mb-1 text-on-surface-light dark:text-on-surface-dark">Validação Estratégica</h4>
-                        <p className="text-xs text-on-surface-secondary-light dark:text-on-surface-secondary-dark mb-3">
-                            Garante que todos os elementos do projeto estejam alinhados. Requer aprovação do cliente para seguir.
-                        </p>
-                        <div className="flex items-center gap-2">
-                            <button className="bg-primary text-white text-xs font-semibold px-4 py-2 rounded-lg">Começar</button>
-                            <button className="text-xs font-semibold text-on-surface-secondary-light dark:text-on-surface-secondary-dark px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">Mais tarde</button>
-                        </div>
-                    </div>
+                    <InstructionBox
+                        title="Validação Estratégica"
+                        description="Garante que todos os elementos do projeto estejam alinhados. Requer aprovação do cliente para seguir."
+                        primaryButtonText="Começar"
+                        secondaryButtonText="Mais tarde"
+                        onPrimaryAction={() => console.log('Começar ação')}
+                        onSecondaryAction={() => console.log('Mais tarde ação')}
+                        onClose={() => console.log('Box fechado')}
+                        showCloseButton={true}
+                        variant="info"
+                    />
                 </div>
             </section>
 
