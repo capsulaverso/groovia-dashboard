@@ -21,6 +21,11 @@ interface Agent {
   fallbackPrompt: string;
   webhookUrl?: string;
   webhookEnabled: boolean;
+  clientId: number;
+  behaviorType: 'autonomous' | 'interagent';
+  canCommunicateWithAgents: boolean;
+  allowedAgentIds: number[];
+  capabilities: string[];
 }
 
 interface TestResult {
@@ -61,7 +66,12 @@ const AgentsControlPage: React.FC = () => {
       aiProvider: 'replit',
       systemPrompt: 'Você é um assistente inteligente e prestativo.',
       fallbackPrompt: 'Desculpe, houve um erro ao processar sua solicitação. Por favor, tente novamente.',
-      webhookEnabled: false
+      webhookEnabled: false,
+      clientId: 1,
+      behaviorType: 'autonomous',
+      canCommunicateWithAgents: false,
+      allowedAgentIds: [],
+      capabilities: []
     });
     setShowModal(true);
   };
@@ -188,6 +198,18 @@ const AgentsControlPage: React.FC = () => {
                   <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
                     {agent.aiModel}
                   </span>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    agent.behaviorType === 'interagent' 
+                      ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400'
+                      : 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
+                  }`}>
+                    {agent.behaviorType === 'interagent' ? '🤝 Interagente' : '🔒 Autônomo'}
+                  </span>
+                  {agent.canCommunicateWithAgents && (
+                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+                      💬 Comunica com {agent.allowedAgentIds.length} agente(s)
+                    </span>
+                  )}
                 </div>
                 <p className="text-gray-600 dark:text-gray-400 mb-3">{agent.description}</p>
                 <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-500">
@@ -419,7 +441,93 @@ const AgentsControlPage: React.FC = () => {
                 />
               </div>
 
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Comportamento e Comunicação</h3>
+                
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Tipo de Comportamento
+                    </label>
+                    <select
+                      value={editingAgent.behaviorType}
+                      onChange={(e) => setEditingAgent({ ...editingAgent, behaviorType: e.target.value as 'autonomous' | 'interagent' })}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    >
+                      <option value="autonomous">Autônomo</option>
+                      <option value="interagent">Interagente</option>
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Autônomo: trabalha sozinho | Interagente: pode se comunicar com outros agentes
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      ID do Cliente
+                    </label>
+                    <input
+                      type="number"
+                      value={editingAgent.clientId}
+                      onChange={(e) => setEditingAgent({ ...editingAgent, clientId: parseInt(e.target.value) || 1 })}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      min="1"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 mb-3">
+                  <input
+                    type="checkbox"
+                    id="canCommunicate"
+                    checked={editingAgent.canCommunicateWithAgents}
+                    onChange={(e) => setEditingAgent({ ...editingAgent, canCommunicateWithAgents: e.target.checked })}
+                    className="w-5 h-5 text-primary rounded"
+                  />
+                  <label htmlFor="canCommunicate" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Permitir comunicação com outros agentes
+                  </label>
+                </div>
+
+                {editingAgent.canCommunicateWithAgents && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Agentes Permitidos (IDs separados por vírgula)
+                    </label>
+                    <input
+                      type="text"
+                      value={editingAgent.allowedAgentIds.join(', ')}
+                      onChange={(e) => {
+                        const ids = e.target.value.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+                        setEditingAgent({ ...editingAgent, allowedAgentIds: ids });
+                      }}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      placeholder="ex: 1, 2, 3"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Capacidades (separadas por vírgula)
+                  </label>
+                  <input
+                    type="text"
+                    value={editingAgent.capabilities.join(', ')}
+                    onChange={(e) => {
+                      const caps = e.target.value.split(',').map(c => c.trim()).filter(c => c.length > 0);
+                      setEditingAgent({ ...editingAgent, capabilities: caps });
+                    }}
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="ex: análise de dados, geração de relatórios, consulta a APIs"
+                  />
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Descreva o que este agente é capaz de fazer
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
                 <div className="flex items-center gap-3 mb-3">
                   <input
                     type="checkbox"
