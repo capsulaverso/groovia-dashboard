@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { storage } from './storage.js';
 import { comparePassword } from './auth.js';
+import { testAIAgent, clearCache, getCacheStats } from './aiService.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -98,6 +99,39 @@ app.delete('/api/agents/:id', async (req, res) => {
     res.status(204).send();
   } catch (error) {
     res.status(500).json({ error: 'Erro ao deletar agente' });
+  }
+});
+
+// AI Test endpoint
+app.post('/api/agents/test', async (req, res) => {
+  try {
+    const result = await testAIAgent(req.body);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Erro ao testar agente' 
+    });
+  }
+});
+
+// Cache Management
+app.get('/api/cache/stats', async (req, res) => {
+  try {
+    const stats = getCacheStats();
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar estatísticas de cache' });
+  }
+});
+
+app.delete('/api/cache', async (req, res) => {
+  try {
+    const pattern = req.query.pattern as string | undefined;
+    const clearedCount = clearCache(pattern);
+    res.json({ success: true, clearedCount });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao limpar cache' });
   }
 });
 
