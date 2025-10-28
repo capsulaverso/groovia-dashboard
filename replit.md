@@ -16,7 +16,7 @@ Default theme: Light mode (tema claro).
 **API:** Express.js RESTful API handling CRUD for users, agents, documents, conversations, and messages.
 **Security:** bcryptjs for password hashing, environment-based credentials.
 **Schema:** Includes `users` (auth, roles), `agents` (AI agent configs with IA fields), `documents` (LGPD compliant), `conversations`, `messages`, and `userProgress`.
-**AI Integration:** Multi-provider AI system (Replit AI, OpenAI, Groq) with intelligent caching, webhook support, and fallback mechanisms.
+**AI Integration:** Multi-provider AI system (Groovia Intelligence Nativo 1.0, OpenAI, Groq) with intelligent caching, webhook support, and fallback mechanisms.
 **AI Service:** `server/aiService.ts` - Centralized AI service with node-cache (1h TTL), webhook-first execution, and comprehensive error handling.
 
 ## Frontend Architecture
@@ -55,10 +55,10 @@ Default theme: Light mode (tema claro).
 
 ## AI Agent Testing System (COMPLETE ✅)
 - **Database Schema Updates**: Added AI configuration fields to agents table (ai_model, ai_provider, system_prompt, fallback_prompt, webhook_url, webhook_enabled)
-- **AI Service Implementation**: Multi-provider support (Replit AI, OpenAI, Groq) with intelligent caching and webhook integration
+- **AI Service Implementation**: Multi-provider support (Groovia Intelligence Nativo 1.0, OpenAI, Groq) with intelligent caching and webhook integration
 - **API Endpoints**: `/api/agents/test`, `/api/cache/stats`, `/api/cache` (DELETE)
 - **Admin Interface**: Complete agent management UI with test button, detailed result panels showing latency, tokens, cache status
-- **Integration**: Replit AI Integrations installed (OpenAI-compatible, no personal API key required)
+- **Integration**: Groovia Intelligence Nativo 1.0 (IA nativa do sistema, sem necessidade de API key externa)
 - **Testing**: Manual validation completed - 2.8s response time, 255 tokens, full functionality verified
 
 ## Responsive Pagination System (COMPLETE ✅)
@@ -85,9 +85,9 @@ Default theme: Light mode (tema claro).
 ## Third-Party Services
 
 **AI Providers:** 
-- Replit AI Integrations (OpenAI-compatible, no API key required, billed to Replit credits)
-- OpenAI (optional, requires OPENAI_API_KEY)
-- Groq (optional, requires GROQ_API_KEY)
+- Groovia Intelligence Nativo 1.0 (IA nativa do sistema, sem necessidade de API key externa)
+- OpenAI (opcional, requer OPENAI_API_KEY)
+- Groq (opcional, requer GROQ_API_KEY)
 **API Integration:** Google Drive, Google Slides, Custom WebHooks.
 **Deployment:** Replit.
 **Cache:** node-cache for AI response caching (reduces costs and latency).

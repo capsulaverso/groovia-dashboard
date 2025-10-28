@@ -171,7 +171,7 @@ const AgentsControlPage: React.FC = () => {
                     {agent.isActive ? 'Ativo' : 'Inativo'}
                   </span>
                   <span className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
-                    {agent.aiProvider === 'replit' ? 'Replit AI' : agent.aiProvider.toUpperCase()}
+                    {agent.aiProvider === 'replit' ? 'Groovia Intelligence Nativo 1.0' : agent.aiProvider.toUpperCase()}
                   </span>
                   <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
                     {agent.aiModel}
@@ -362,7 +362,7 @@ const AgentsControlPage: React.FC = () => {
                     onChange={(e) => setEditingAgent({ ...editingAgent, aiProvider: e.target.value })}
                     className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
-                    <option value="replit">Replit AI (sem API key)</option>
+                    <option value="replit">Groovia Intelligence Nativo 1.0</option>
                     <option value="openai">OpenAI (requer API key)</option>
                     <option value="groq">Groq (requer API key)</option>
                   </select>

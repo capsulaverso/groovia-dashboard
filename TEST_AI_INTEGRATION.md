@@ -6,7 +6,7 @@
 
 #### 1. **Backend Completo** (`server/aiService.ts`)
 - ✅ Suporte para 3 providers de IA:
-  - **Replit AI** (sem necessidade de API key)
+  - **Groovia Intelligence Nativo 1.0** (IA nativa do sistema)
   - **OpenAI** (requer `OPENAI_API_KEY`)
   - **Groq** (requer `GROQ_API_KEY`)
 - ✅ Sistema de cache inteligente (TTL: 1 hora)
@@ -68,7 +68,7 @@ Campos adicionados na tabela `agents`:
 4. **Crie/Edite um agente:**
    - Clique em **"Criar Agente"** ou **"Editar"**
    - Configure:
-     - Provider: Replit AI (sem API key necessária)
+     - Provider: Groovia Intelligence Nativo 1.0 (IA nativa do sistema)
      - Modelo: gpt-4o-mini
      - System Prompt: personalizado
      - Fallback Prompt: mensagem de erro
@@ -77,7 +77,7 @@ Campos adicionados na tabela `agents`:
 ### Opção 2: Via API (cURL)
 
 ```bash
-# Testar agente com Replit AI
+# Testar agente com Groovia Intelligence Nativo 1.0
 curl -X POST http://localhost:3001/api/agents/test \
   -H "Content-Type: application/json" \
   -d '{
@@ -118,7 +118,8 @@ curl -X POST http://localhost:3001/api/agents/test \
 
 ## 📊 Modelos Disponíveis
 
-### Replit AI (Sem API Key)
+### Groovia Intelligence Nativo 1.0
+IA nativa do sistema, sem necessidade de API key externa:
 - `gpt-5` (mais recente, lançado em ago/2025)
 - `gpt-5-mini`
 - `gpt-4o`
@@ -239,7 +240,7 @@ Para usar OpenAI ou Groq com suas próprias chaves:
 ## 🚀 Status da Implementação
 
 ✅ Schema do banco atualizado
-✅ Integração Replit AI instalada
+✅ Groovia Intelligence Nativo 1.0 integrado
 ✅ Serviço de IA implementado (OpenAI + Groq + Cache)
 ✅ Endpoints de API criados
 ✅ Interface de administração completa
