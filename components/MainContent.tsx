@@ -27,6 +27,19 @@ const MainContent: React.FC = () => {
         <main className="flex-1 p-6">
             <Header />
 
+            <div className="mb-6">
+                <InstructionBox
+                    title="Bem-vindo ao Groovia Dashboard!"
+                    description="Configure seus agentes de IA e inicie o diagnóstico inteligente para seu projeto. Este é um componente reutilizável que pode ser usado em todo o sistema."
+                    primaryButtonText="Iniciar Tour"
+                    secondaryButtonText="Pular"
+                    onPrimaryAction={() => alert('Tour iniciado!')}
+                    onSecondaryAction={() => console.log('Tour pulado')}
+                    variant="info"
+                    icon="info"
+                />
+            </div>
+
             <section className="mb-10">
                 <div className="flex items-center gap-4 mb-6">
                     <h2 className="text-2xl font-semibold text-on-surface-light dark:text-on-surface-dark">O Diagnóstico Inteligente (SCAN)</h2>
