@@ -6,6 +6,7 @@ Groovia Dashboard is a modern, responsive dashboard application built with React
 
 Preferred communication style: Simple, everyday language.
 Preferred language: Portuguese (PT-BR).
+Default theme: Light mode (tema claro).
 
 # System Architecture
 

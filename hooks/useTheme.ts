@@ -10,8 +10,8 @@ export const useTheme = () => {
             return savedTheme;
         }
         
-        // Padrão: modo escuro
-        return 'dark';
+        // Padrão: modo claro
+        return 'light';
     });
 
     useEffect(() => {
