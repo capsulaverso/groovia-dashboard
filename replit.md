@@ -15,7 +15,9 @@ Default theme: Light mode (tema claro).
 **Database:** PostgreSQL 16 (Neon-backed) with Drizzle ORM for type-safe operations.
 **API:** Express.js RESTful API handling CRUD for users, agents, documents, conversations, and messages.
 **Security:** bcryptjs for password hashing, environment-based credentials.
-**Schema:** Includes `users` (auth, roles), `agents` (AI agent configs), `documents` (LGPD compliant), `conversations`, `messages`, and `userProgress`.
+**Schema:** Includes `users` (auth, roles), `agents` (AI agent configs with IA fields), `documents` (LGPD compliant), `conversations`, `messages`, and `userProgress`.
+**AI Integration:** Multi-provider AI system (Replit AI, OpenAI, Groq) with intelligent caching, webhook support, and fallback mechanisms.
+**AI Service:** `server/aiService.ts` - Centralized AI service with node-cache (1h TTL), webhook-first execution, and comprehensive error handling.
 
 ## Frontend Architecture
 
@@ -29,7 +31,12 @@ Default theme: Light mode (tema claro).
 **Design Patterns:** Composition, custom hooks, props-based communication, Presentational/Container components.
 **Styling Strategy:** Tailwind CSS with dark mode support and custom color palette.
 **Type System:** TypeScript interfaces defined in `types.ts` for dashboard and workspace entities.
-**Administrative Features:** Agent management (CRUD, enable/disable), integration support (WebHook, N8N, LangChain), and statistics.
+**Administrative Features:** 
+- Agent management (CRUD, enable/disable, test functionality)
+- AI Configuration (provider, model, system prompt, fallback prompt)
+- Integration support (WebHook with fallback, N8N, LangChain)
+- Real-time agent testing with detailed metrics (latency, tokens, cache status)
+- Statistics and cache management
 **Data Architecture:** Static constants (`constants.ts`), `getAgentWorkspaceConfig()` factory for dynamic agent configurations, and example conversation system for demonstration.
 
 ## Build and Development
@@ -44,12 +51,22 @@ Default theme: Light mode (tema claro).
 **Mechanism:** Toggles `dark` class on document root, leverages Tailwind's dark mode variants.
 **Color Palette:** Custom primary (purple), surface, and on-surface colors.
 
+# Recent Changes (October 28, 2025)
+
+## AI Agent Testing System (COMPLETE ✅)
+- **Database Schema Updates**: Added AI configuration fields to agents table (ai_model, ai_provider, system_prompt, fallback_prompt, webhook_url, webhook_enabled)
+- **AI Service Implementation**: Multi-provider support (Replit AI, OpenAI, Groq) with intelligent caching and webhook integration
+- **API Endpoints**: `/api/agents/test`, `/api/cache/stats`, `/api/cache` (DELETE)
+- **Admin Interface**: Complete agent management UI with test button, detailed result panels showing latency, tokens, cache status
+- **Integration**: Replit AI Integrations installed (OpenAI-compatible, no personal API key required)
+- **Testing**: Manual validation completed - 2.8s response time, 255 tokens, full functionality verified
+
 # External Dependencies
 
 ## NPM Packages
 
-**Production:** `react`, `react-dom`.
-**Development:** `@vitejs/plugin-react`, `typescript`, `@types/node`, `vite`.
+**Production:** `react`, `react-dom`, `openai`, `groq-sdk`, `node-cache`, `express`, `cors`, `bcryptjs`, `drizzle-orm`, `pg`.
+**Development:** `@vitejs/plugin-react`, `typescript`, `@types/node`, `vite`, `drizzle-kit`, `tsx`.
 
 ## CDN Resources
 
@@ -59,8 +76,13 @@ Default theme: Light mode (tema claro).
 
 ## Third-Party Services
 
-**API Integration:** Gemini API, Google Drive, Google Slides.
+**AI Providers:** 
+- Replit AI Integrations (OpenAI-compatible, no API key required, billed to Replit credits)
+- OpenAI (optional, requires OPENAI_API_KEY)
+- Groq (optional, requires GROQ_API_KEY)
+**API Integration:** Google Drive, Google Slides, Custom WebHooks.
 **Deployment:** Replit.
+**Cache:** node-cache for AI response caching (reduces costs and latency).
 
 ## Development Tools
 
