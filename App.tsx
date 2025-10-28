@@ -11,9 +11,10 @@ import EULAPage from './components/pages/EULAPage';
 import UsersManagementPage from './components/pages/UsersManagementPage';
 import ReportsPage from './components/pages/ReportsPage';
 import AgentsControlPage from './components/pages/AgentsControlPage';
+import { DatabaseTestPage } from './components/pages/DatabaseTestPage';
 
 type ViewType = 'home' | 'documents' | 'my-agents' | 'profile' | 'docs' | 'privacy' | 'eula' | 
-                'users' | 'reports' | 'agents-control';
+                'users' | 'reports' | 'agents-control' | 'db-test';
 
 const App: React.FC = () => {
     const [currentView, setCurrentView] = useState<ViewType>('home');
@@ -40,6 +41,8 @@ const App: React.FC = () => {
                 return <ReportsPage />;
             case 'agents-control':
                 return <AgentsControlPage />;
+            case 'db-test':
+                return <DatabaseTestPage />;
             default:
                 return <MainContent />;
         }

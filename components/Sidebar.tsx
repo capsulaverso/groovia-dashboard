@@ -173,6 +173,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
                             isActive={activeView === 'eula'}
                             onClick={() => onNavigate('eula')}
                         />
+                        <MenuItem
+                            icon="storage"
+                            label="Teste do Banco"
+                            isActive={activeView === 'db-test'}
+                            onClick={() => onNavigate('db-test')}
+                        />
                     </MenuSection>
                 </nav>
             </div>

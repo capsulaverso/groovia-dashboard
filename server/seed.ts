@@ -1,5 +1,6 @@
 import { storage } from './storage.js';
 import { AGENT_CARDS_DATA } from '../constants.js';
+import { hashPassword } from './auth.js';
 
 async function seedDatabase() {
   try {
@@ -8,14 +9,15 @@ async function seedDatabase() {
     // Criar usuário admin padrão
     const adminUser = await storage.getUserByEmail('admin@groovia.com');
     if (!adminUser) {
+      const hashedPassword = await hashPassword('admin123');
       await storage.createUser({
         name: 'Administrador',
         email: 'admin@groovia.com',
-        password: 'admin123',
+        password: hashedPassword,
         role: 'admin',
         avatar: 'https://i.pravatar.cc/150?img=33'
       });
-      console.log('✅ Usuário admin criado');
+      console.log('✅ Usuário admin criado com senha criptografada');
     } else {
       console.log('ℹ️  Usuário admin já existe');
     }
@@ -23,14 +25,15 @@ async function seedDatabase() {
     // Criar usuário normal padrão
     const normalUser = await storage.getUserByEmail('usuario@groovia.com');
     if (!normalUser) {
+      const hashedPassword = await hashPassword('user123');
       await storage.createUser({
         name: 'João Silva',
         email: 'usuario@groovia.com',
-        password: 'user123',
+        password: hashedPassword,
         role: 'user',
         avatar: 'https://i.pravatar.cc/150?img=12'
       });
-      console.log('✅ Usuário normal criado');
+      console.log('✅ Usuário normal criado com senha criptografada');
     } else {
       console.log('ℹ️  Usuário normal já existe');
     }
@@ -45,7 +48,7 @@ async function seedDatabase() {
           title: agentData.title,
           description: agentData.description,
           agentType: agentData.agentType,
-          integrations: JSON.stringify(agentData.integrations),
+          integrations: agentData.integrations,
           isActive: true
         });
       }
