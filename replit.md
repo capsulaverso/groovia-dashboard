@@ -22,10 +22,10 @@ Preferred language: Portuguese (PT-BR).
 The application follows a modular component-based architecture with clear separation of concerns:
 
 **Dashboard Components:**
-- **App.tsx**: Root component implementing a three-column flex layout (Sidebar, MainContent, RightAside)
-- **Sidebar**: Left navigation panel featuring branding and theme toggle functionality
-- **MainContent**: Central content area displaying plugin cards, scan progress, chat history, and admin panel access. Features dynamic "Continue de onde parou" section with real-time user progress tracking
-- **RightAside**: Right information panel for contextual help and actions
+- **App.tsx**: Root component with internal routing system managing view navigation. Uses useState to track currentView and renders appropriate page component via switch statement. RightAside only displays on home view
+- **Sidebar**: Intelligent left navigation panel with role-based adaptive menu, collapsible sections (Administração and Sistema), branding, and theme toggle. Menu items organized in three sections: PRINCIPAL (Home, Documentos, Agentes, Perfil), ADMINISTRAÇÃO (Usuários, Controle de Agentes, Relatórios - admin only), SISTEMA (Documentação, Privacidade, EULA - collapsible)
+- **MainContent**: Home dashboard with plugin cards, scan progress, admin panel access, and dynamic "Continue de onde parou" section with real-time user progress tracking
+- **RightAside**: Right information panel for contextual help and actions (only visible on home view)
 - **ScanCard**: Reusable card component for displaying plugin/agent status with progress indicators
 - **ProgressRing**: SVG-based circular progress indicator using stroke-dashoffset animation
 - **InfoItem**: Informational card components for the right aside
@@ -34,12 +34,14 @@ The application follows a modular component-based architecture with clear separa
 - **AgentCard**: Interactive card component with animated progress bars, circular context indicator, and clickable workspace integration for AI agent interactions
 - **UserMenu**: Dropdown menu component activated by clicking user avatar, featuring user info header, quick access to Documents, Settings, Admin Panel (for admins), and logout functionality with click-outside-to-close behavior
 
-**Administrative Components:**
-- **AdminDashboard**: Full administrative interface for managing AI agents with CRUD operations (Create, Read, Update, Delete)
-- **AgentConfigModal**: Modal component for creating and editing agent configurations with support for three integration types:
-  - **WebHook Integration**: Custom HTTP endpoints with configurable methods (GET, POST, PUT, DELETE), headers, and timeout settings
-  - **N8N Integration**: Workflow automation platform integration with workflow ID and custom webhook URLs
-  - **LangChain Integration**: AI agent framework integration with API key management, model selection (GPT-4, GPT-3.5, Claude 3, Gemini Pro), and agent ID configuration
+**Content Pages:**
+- **DocumentsPage**: Document management interface with CRUD operations, LGPD compliance features (data retention configuration, automatic deletion after expiration), upload/download functionality, and privacy controls
+- **MyAgentsPage**: Agent gallery with grid layout, search functionality, and three-state filtering (All, Active with progress > 0, Completed with progress = 100)
+- **ProfilePage**: User profile management with editable personal information (name, email), avatar upload, role badge display, and security settings (password change, 2FA)
+- **DocsPage, PrivacyPage, EULAPage**: Informational pages with formatted content about platform usage, LGPD privacy policies, and terms of service
+- **UsersManagementPage** (Admin): User administration with CRUD operations, role toggling (user/admin), statistics dashboard, and filterable user table
+- **ReportsPage** (Admin): Analytics dashboard with colored metric cards, usage graphs (most used agents, activity by hour), and recent sessions table
+- **AgentsControlPage** (Admin): Agent management interface (wrapper for AdminDashboard) with CRUD operations for AI agents and configuration of three integration types (WebHook, N8N, LangChain)
 
 **Agent Workspace System (Full-Page Dedicated Interface):**
 - **AgentWorkspace**: Main workspace container with three-panel layout providing dedicated full-page environment for agent interactions
@@ -48,12 +50,14 @@ The application follows a modular component-based architecture with clear separa
 - **WorkspaceRightSidebar**: Information panel with tabbed interface for documents (client files with preview/download) and help (contextual messages and interactive tooltips with target references)
 
 **State Management:**
-- Custom React hooks pattern (`useTheme`, `useUserProgress`, `useTooltipPositioning`) for cross-cutting concerns
+- Custom React hooks pattern (`useTheme`, `useUser`, `useUserProgress`, `useTooltipPositioning`) for cross-cutting concerns
 - `useTheme`: Theme management with localStorage persistence
+- `useUser`: User authentication and role management (user/admin) with localStorage persistence, login/logout/update functions, and isAdmin computed property
 - `useUserProgress`: User progress tracking with localStorage persistence (current agent, step, act, context progress, internal code)
 - `useTooltipPositioning`: Dynamic tooltip positioning with auto-flip and viewport boundary detection
-- LocalStorage for theme and progress persistence
+- LocalStorage for theme, user authentication, and progress persistence
 - Component-level state using React hooks (useState, useEffect, useRef)
+- Internal routing state managed in App.tsx via currentView useState
 
 **Design Patterns:**
 - Composition pattern for building UI from smaller, reusable components
