@@ -78,6 +78,19 @@ Default theme: Light mode (tema claro).
 - **Empty States**: Proper handling when no active agents available
 - **Performance**: Memoized calculations and optimized rendering
 
+## ScanCard Typography & Responsiveness (COMPLETE ✅)
+- **Typography System**: 
+  - Titles: Poppins 18px Bold (line-clamp-2 para limitar em 2 linhas)
+  - Description: Poppins 14px Regular (line-clamp-3 para limitar em 3 linhas)
+- **Layout Improvements**:
+  - Min-height: 280px para consistência visual
+  - Flex layout com mt-auto para alinhar conteúdo ao final
+  - Transições suaves nas barras de progresso
+- **Responsive Grid Updates**:
+  - Mobile (1 col) → Small (2 cols) → Large (3 cols) → XL (4 cols) → 2XL (6 cols)
+  - Breakpoints otimizados para melhor uso do espaço em telas grandes
+- **Data Type Fix**: Integrations field now properly accepts JSON objects from database
+
 # External Dependencies
 
 ## NPM Packages
