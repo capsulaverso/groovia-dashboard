@@ -1,6 +1,6 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../hooks/useTheme';
+import { useUser } from '../hooks/useUser';
 
 const GrooviaLogo: React.FC = () => (
     <h1 className="text-on-surface-light dark:text-on-surface-dark text-2xl font-bold">
@@ -26,15 +26,155 @@ const ThemeSelector: React.FC = () => {
     );
 };
 
+interface MenuItemProps {
+    icon: string;
+    label: string;
+    isActive?: boolean;
+    onClick?: () => void;
+    badge?: string;
+}
 
-const Sidebar: React.FC = () => {
+const MenuItem: React.FC<MenuItemProps> = ({ icon, label, isActive, onClick, badge }) => (
+    <button
+        onClick={onClick}
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+            isActive
+                ? 'bg-primary text-white shadow-lg shadow-primary/30'
+                : 'text-on-surface-secondary-light dark:text-on-surface-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-800'
+        }`}
+    >
+        <span className="material-icons-outlined text-xl">{icon}</span>
+        <span className="font-medium text-sm flex-1 text-left">{label}</span>
+        {badge && (
+            <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-semibold">
+                {badge}
+            </span>
+        )}
+    </button>
+);
+
+interface MenuSectionProps {
+    title: string;
+    children: React.ReactNode;
+    isCollapsible?: boolean;
+    defaultCollapsed?: boolean;
+}
+
+const MenuSection: React.FC<MenuSectionProps> = ({ title, children, isCollapsible = false, defaultCollapsed = false }) => {
+    const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
+
+    return (
+        <div className="mb-6">
+            <div 
+                className={`flex items-center justify-between px-4 mb-3 ${isCollapsible ? 'cursor-pointer hover:opacity-80' : ''}`}
+                onClick={() => isCollapsible && setIsCollapsed(!isCollapsed)}
+            >
+                <h3 className="text-xs font-semibold text-on-surface-secondary-light dark:text-on-surface-secondary-dark uppercase tracking-wider">
+                    {title}
+                </h3>
+                {isCollapsible && (
+                    <span className="material-icons-outlined text-sm text-on-surface-secondary-light dark:text-on-surface-secondary-dark transition-transform" style={{ transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>
+                        expand_more
+                    </span>
+                )}
+            </div>
+            {!isCollapsed && (
+                <div className="space-y-1">
+                    {children}
+                </div>
+            )}
+        </div>
+    );
+};
+
+interface SidebarProps {
+    activeView: string;
+    onNavigate: (view: string) => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
+    const { isAdmin } = useUser();
+
     return (
         <aside className="w-64 p-6 hidden lg:block">
-            <div className="bg-surface-light dark:bg-surface-dark w-full h-full rounded-2xl flex flex-col p-6 sticky top-6">
-                <div className="flex items-center justify-between mb-6">
+            <div className="bg-surface-light dark:bg-surface-dark w-full h-full rounded-2xl flex flex-col p-6 sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
+                <div className="flex items-center justify-between mb-8">
                     <GrooviaLogo />
                     <ThemeSelector />
                 </div>
+
+                <nav className="flex-1 overflow-y-auto">
+                    <MenuSection title="Principal">
+                        <MenuItem
+                            icon="home"
+                            label="Home"
+                            isActive={activeView === 'home'}
+                            onClick={() => onNavigate('home')}
+                        />
+                        <MenuItem
+                            icon="folder"
+                            label="Meus Documentos"
+                            isActive={activeView === 'documents'}
+                            onClick={() => onNavigate('documents')}
+                        />
+                        <MenuItem
+                            icon="smart_toy"
+                            label="Meus Agentes"
+                            isActive={activeView === 'my-agents'}
+                            onClick={() => onNavigate('my-agents')}
+                        />
+                        <MenuItem
+                            icon="person"
+                            label="Meu Perfil"
+                            isActive={activeView === 'profile'}
+                            onClick={() => onNavigate('profile')}
+                        />
+                    </MenuSection>
+
+                    {isAdmin && (
+                        <MenuSection title="Administração" isCollapsible={true} defaultCollapsed={false}>
+                            <MenuItem
+                                icon="group"
+                                label="Usuários"
+                                isActive={activeView === 'users'}
+                                onClick={() => onNavigate('users')}
+                            />
+                            <MenuItem
+                                icon="settings"
+                                label="Controle de Agentes"
+                                isActive={activeView === 'agents-control'}
+                                onClick={() => onNavigate('agents-control')}
+                            />
+                            <MenuItem
+                                icon="assessment"
+                                label="Relatórios"
+                                isActive={activeView === 'reports'}
+                                onClick={() => onNavigate('reports')}
+                            />
+                        </MenuSection>
+                    )}
+
+                    <MenuSection title="Sistema" isCollapsible={true} defaultCollapsed={true}>
+                        <MenuItem
+                            icon="description"
+                            label="Documentação"
+                            isActive={activeView === 'docs'}
+                            onClick={() => onNavigate('docs')}
+                        />
+                        <MenuItem
+                            icon="policy"
+                            label="Privacidade"
+                            isActive={activeView === 'privacy'}
+                            onClick={() => onNavigate('privacy')}
+                        />
+                        <MenuItem
+                            icon="gavel"
+                            label="EULA"
+                            isActive={activeView === 'eula'}
+                            onClick={() => onNavigate('eula')}
+                        />
+                    </MenuSection>
+                </nav>
             </div>
         </aside>
     );
