@@ -11,6 +11,7 @@ import UserMenu from './UserMenu';
 import { generateWorkspaceConfig } from '../utils/agentWorkspaceConfig';
 import { populateExampleConversations } from '../utils/populateConversations';
 import { useUserProgress } from '../hooks/useUserProgress';
+import { useApi } from '../hooks/useApi';
 import type { AgentCardData, AgentWorkspaceConfig, Integration } from '../types';
 
 interface HeaderProps {
@@ -57,13 +58,38 @@ const Header: React.FC<HeaderProps> = ({ onAdminClick, activeIntegrations }) => 
     </header>
 );
 
+interface Agent {
+    id: number;
+    internalCode: string;
+    title: string;
+    description: string;
+    agentType: string;
+    integrations: Integration[];
+    isActive: boolean;
+    aiModel: string;
+    aiProvider: string;
+}
+
 const MainContent: React.FC = () => {
     const [activeWorkspace, setActiveWorkspace] = useState<AgentWorkspaceConfig | null>(null);
     const [showAdmin, setShowAdmin] = useState(false);
     const [showTooltip, setShowTooltip] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [cardsPerPage, setCardsPerPage] = useState(4);
     const continueRef = useRef<HTMLDivElement>(null);
     
     const { progress, isLoading } = useUserProgress();
+    const { data: agents, loading: agentsLoading } = useApi<Agent[]>('/agents');
+
+    // Memorizar agentes ativos
+    const activeAgents = useMemo(() => {
+        return agents?.filter(agent => agent.isActive) || [];
+    }, [agents]);
+
+    // Calcular total de páginas
+    const totalPages = useMemo(() => {
+        return Math.max(1, Math.ceil(activeAgents.length / cardsPerPage));
+    }, [activeAgents.length, cardsPerPage]);
 
     // Extrair integrações únicas dos agentes ativos (contextProgress > 0)
     const activeIntegrations = useMemo(() => {
@@ -82,6 +108,34 @@ const MainContent: React.FC = () => {
         
         return Array.from(integrationsMap.values());
     }, []);
+
+    // Detectar tamanho da tela e ajustar número de cards
+    useEffect(() => {
+        const updateCardsPerPage = () => {
+            const width = window.innerWidth;
+            if (width < 640) {
+                setCardsPerPage(1);
+            } else if (width < 768) {
+                setCardsPerPage(2);
+            } else if (width < 1024) {
+                setCardsPerPage(3);
+            } else if (width < 1536) {
+                setCardsPerPage(4);
+            } else {
+                setCardsPerPage(6);
+            }
+        };
+
+        updateCardsPerPage();
+        window.addEventListener('resize', updateCardsPerPage);
+        return () => window.removeEventListener('resize', updateCardsPerPage);
+    }, []);
+
+    // Clampar currentPage quando cardsPerPage ou activeAgents mudam
+    useEffect(() => {
+        const newTotalPages = Math.max(1, Math.ceil(activeAgents.length / cardsPerPage));
+        setCurrentPage(prev => Math.min(prev, newTotalPages));
+    }, [cardsPerPage, activeAgents.length]);
 
     // Popular conversas de exemplo na primeira vez que o componente carregar
     useEffect(() => {
@@ -158,11 +212,70 @@ const MainContent: React.FC = () => {
                     <h2 className="text-2xl font-semibold text-on-surface-light dark:text-on-surface-dark">O Diagnóstico Inteligente (SCAN)</h2>
                     <span className="text-xs font-medium text-on-surface-secondary-light dark:text-on-surface-secondary-dark bg-surface-light dark:bg-surface-dark px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700">Ato 01</span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    {SCAN_CARDS_DATA.map(card => (
-                        <ScanCard key={card.id} title={card.title} description={card.description} progress={card.progress} />
-                    ))}
-                </div>
+
+                {agentsLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                    </div>
+                ) : activeAgents.length > 0 ? (
+                    <>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+                            {activeAgents
+                                .slice((currentPage - 1) * cardsPerPage, currentPage * cardsPerPage)
+                                .map(agent => (
+                                    <ScanCard 
+                                        key={agent.id} 
+                                        title={agent.title} 
+                                        description={agent.description} 
+                                        progress={Math.floor(Math.random() * 100)}
+                                    />
+                                ))
+                            }
+                        </div>
+
+                        {activeAgents.length > cardsPerPage && (
+                            <div className="flex items-center justify-center gap-2 mt-8">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                    disabled={currentPage === 1}
+                                    className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                                >
+                                    <span className="material-icons-outlined text-lg">chevron_left</span>
+                                    Anterior
+                                </button>
+
+                                <div className="flex items-center gap-1">
+                                    {Array.from({ length: totalPages }).map((_, index) => (
+                                        <button
+                                            key={index}
+                                            onClick={() => setCurrentPage(index + 1)}
+                                            className={`w-10 h-10 rounded-lg transition-colors ${
+                                                currentPage === index + 1
+                                                    ? 'bg-primary text-white'
+                                                    : 'border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                            }`}
+                                        >
+                                            {index + 1}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                                >
+                                    Próximo
+                                    <span className="material-icons-outlined text-lg">chevron_right</span>
+                                </button>
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <div className="text-center py-12">
+                        <p className="text-gray-500 dark:text-gray-400">Nenhum agente disponível</p>
+                    </div>
+                )}
             </section>
 
             <section className="mb-10">
