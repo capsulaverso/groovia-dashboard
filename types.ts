@@ -26,6 +26,12 @@ export interface InstructionBoxProps {
     icon?: string;
 }
 
+export interface Integration {
+    id: string;
+    name: string;
+    color: string; // Cor da badge (ex: 'purple', 'green', 'gray')
+}
+
 export interface AgentCardData {
     id: string;
     title: string;
@@ -34,6 +40,7 @@ export interface AgentCardData {
     act: string; // Ex: "Ato 01", "Ato 02"
     internalCode: string; // Código interno para controle de recursos/tokens
     agentType: string; // Tipo do agente para configurar o chat
+    integrations?: Integration[]; // Integrações do agente (GPT, DRIVE, etc)
 }
 
 export interface ChatMessage {

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { SCAN_CARDS_DATA, ANALYSIS_CARDS_DATA, AGENT_CARDS_DATA } from '../constants';
 import ScanCard from './ScanCard';
 import InstructionBox from './InstructionBox';
@@ -11,19 +11,37 @@ import UserMenu from './UserMenu';
 import { generateWorkspaceConfig } from '../utils/agentWorkspaceConfig';
 import { populateExampleConversations } from '../utils/populateConversations';
 import { useUserProgress } from '../hooks/useUserProgress';
-import type { AgentCardData, AgentWorkspaceConfig } from '../types';
+import type { AgentCardData, AgentWorkspaceConfig, Integration } from '../types';
 
 interface HeaderProps {
     onAdminClick: () => void;
+    activeIntegrations: Integration[];
 }
 
-const Header: React.FC<HeaderProps> = ({ onAdminClick }) => (
+const getColorClasses = (color: string): string => {
+    const colorMap: Record<string, string> = {
+        purple: 'bg-primary text-white',
+        green: 'bg-green-500 text-white',
+        gray: 'bg-surface-light dark:bg-surface-dark text-on-surface-secondary-light dark:text-on-surface-secondary-dark border border-gray-200 dark:border-gray-700',
+        blue: 'bg-blue-500 text-white',
+        red: 'bg-red-500 text-white',
+        yellow: 'bg-yellow-500 text-white',
+    };
+    return colorMap[color] || 'bg-gray-500 text-white';
+};
+
+const Header: React.FC<HeaderProps> = ({ onAdminClick, activeIntegrations }) => (
     <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
             <h1 className="text-on-surface-light dark:text-on-surface-dark text-lg font-medium">Plugins</h1>
-            <span className="bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full">GPT 5</span>
-            <span className="bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full">DRIVE</span>
-            <span className="bg-surface-light dark:bg-surface-dark text-on-surface-secondary-light dark:text-on-surface-secondary-dark text-xs font-semibold px-3 py-1 rounded-full">SLIDE</span>
+            {activeIntegrations.map((integration) => (
+                <span 
+                    key={integration.id}
+                    className={`${getColorClasses(integration.color)} text-xs font-semibold px-3 py-1 rounded-full`}
+                >
+                    {integration.name}
+                </span>
+            ))}
         </div>
         <div className="flex items-center gap-4">
             <div className="relative w-full md:w-64">
@@ -46,6 +64,24 @@ const MainContent: React.FC = () => {
     const continueRef = useRef<HTMLDivElement>(null);
     
     const { progress, isLoading } = useUserProgress();
+
+    // Extrair integrações únicas dos agentes ativos (contextProgress > 0)
+    const activeIntegrations = useMemo(() => {
+        const integrationsMap = new Map<string, Integration>();
+        
+        AGENT_CARDS_DATA.forEach(agent => {
+            // Considera agente ativo se tem algum progresso
+            if (agent.contextProgress > 0 && agent.integrations) {
+                agent.integrations.forEach(integration => {
+                    if (!integrationsMap.has(integration.id)) {
+                        integrationsMap.set(integration.id, integration);
+                    }
+                });
+            }
+        });
+        
+        return Array.from(integrationsMap.values());
+    }, []);
 
     // Popular conversas de exemplo na primeira vez que o componente carregar
     useEffect(() => {
@@ -102,7 +138,7 @@ const MainContent: React.FC = () => {
 
     return (
         <main className="flex-1 p-6">
-            <Header onAdminClick={handleOpenAdmin} />
+            <Header onAdminClick={handleOpenAdmin} activeIntegrations={activeIntegrations} />
 
             <div className="mb-6">
                 <InstructionBox

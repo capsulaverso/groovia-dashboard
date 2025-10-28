@@ -91,7 +91,11 @@ export const AGENT_CARDS_DATA: AgentCardData[] = [
         contextProgress: 83,
         act: "Ato 01",
         internalCode: "AGT-SC-001",
-        agentType: "Agente de Diagnóstico"
+        agentType: "Agente de Diagnóstico",
+        integrations: [
+            { id: "gpt", name: "GPT 5", color: "purple" },
+            { id: "drive", name: "DRIVE", color: "green" }
+        ]
     },
     {
         id: "agent-002",
@@ -100,7 +104,11 @@ export const AGENT_CARDS_DATA: AgentCardData[] = [
         contextProgress: 83,
         act: "Ato 01",
         internalCode: "AGT-PM-002",
-        agentType: "Agente de Pesquisa"
+        agentType: "Agente de Pesquisa",
+        integrations: [
+            { id: "gpt", name: "GPT 5", color: "purple" },
+            { id: "drive", name: "DRIVE", color: "green" }
+        ]
     },
     {
         id: "agent-003",
@@ -109,7 +117,11 @@ export const AGENT_CARDS_DATA: AgentCardData[] = [
         contextProgress: 83,
         act: "Ato 01",
         internalCode: "AGT-CP-003",
-        agentType: "Agente de Criação"
+        agentType: "Agente de Criação",
+        integrations: [
+            { id: "gpt", name: "GPT 5", color: "purple" },
+            { id: "slide", name: "SLIDE", color: "gray" }
+        ]
     },
     {
         id: "agent-004",
@@ -118,7 +130,10 @@ export const AGENT_CARDS_DATA: AgentCardData[] = [
         contextProgress: 67,
         act: "Ato 02",
         internalCode: "AGT-EC-004",
-        agentType: "Agente Estratégico"
+        agentType: "Agente Estratégico",
+        integrations: [
+            { id: "gpt", name: "GPT 5", color: "purple" }
+        ]
     },
     {
         id: "agent-005",
@@ -127,7 +142,10 @@ export const AGENT_CARDS_DATA: AgentCardData[] = [
         contextProgress: 45,
         act: "Ato 02",
         internalCode: "AGT-DRE-005",
-        agentType: "Agente Financeiro"
+        agentType: "Agente Financeiro",
+        integrations: [
+            { id: "gpt", name: "GPT 5", color: "purple" }
+        ]
     },
     {
         id: "agent-006",
@@ -136,7 +154,10 @@ export const AGENT_CARDS_DATA: AgentCardData[] = [
         contextProgress: 28,
         act: "Ato 03",
         internalCode: "AGT-OKR-006",
-        agentType: "Agente de Planejamento"
+        agentType: "Agente de Planejamento",
+        integrations: [
+            { id: "gpt", name: "GPT 5", color: "purple" }
+        ]
     },
     {
         id: "agent-007",
@@ -145,6 +166,10 @@ export const AGENT_CARDS_DATA: AgentCardData[] = [
         contextProgress: 15,
         act: "Ato 03",
         internalCode: "AGT-BR-007",
-        agentType: "Agente de Marketing"
+        agentType: "Agente de Marketing",
+        integrations: [
+            { id: "gpt", name: "GPT 5", color: "purple" },
+            { id: "slide", name: "SLIDE", color: "gray" }
+        ]
     },
 ];
