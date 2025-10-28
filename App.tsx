@@ -12,12 +12,19 @@ import UsersManagementPage from './components/pages/UsersManagementPage';
 import ReportsPage from './components/pages/ReportsPage';
 import AgentsControlPage from './components/pages/AgentsControlPage';
 import { DatabaseTestPage } from './components/pages/DatabaseTestPage';
+import LoginPage from './components/pages/LoginPage';
+import { useUser } from './hooks/useUser';
 
 type ViewType = 'home' | 'documents' | 'my-agents' | 'profile' | 'docs' | 'privacy' | 'eula' | 
                 'users' | 'reports' | 'agents-control' | 'db-test';
 
 const App: React.FC = () => {
     const [currentView, setCurrentView] = useState<ViewType>('home');
+    const { user } = useUser();
+
+    if (!user) {
+        return <LoginPage onLoginSuccess={() => setCurrentView('home')} />;
+    }
 
     const renderContent = () => {
         switch (currentView) {
