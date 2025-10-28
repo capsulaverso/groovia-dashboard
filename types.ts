@@ -43,11 +43,66 @@ export interface AgentCardData {
     integrations?: Integration[]; // Integrações do agente (GPT, DRIVE, etc)
 }
 
+export type MessageType = 'text' | 'chart' | 'document' | 'link' | 'approval' | 'image' | 'file';
+
 export interface ChatMessage {
     id: string;
     sender: 'user' | 'agent';
     message: string;
+    messageType?: MessageType;
+    metadata?: MessageMetadata;
     timestamp: Date;
+}
+
+export interface MessageMetadata {
+    chartData?: ChartData;
+    documentRef?: DocumentReference;
+    linkData?: LinkData;
+    approvalRequest?: ApprovalRequest;
+    fileData?: FileData;
+}
+
+export interface ChartData {
+    type: 'bar' | 'line' | 'pie' | 'scatter' | 'area';
+    data: any[];
+    labels?: string[];
+    title?: string;
+    options?: Record<string, any>;
+}
+
+export interface DocumentReference {
+    documentId: string;
+    documentName: string;
+    documentUrl?: string;
+    preview?: string;
+}
+
+export interface LinkData {
+    url: string;
+    title?: string;
+    description?: string;
+    thumbnail?: string;
+}
+
+export interface ApprovalRequest {
+    requestId: string;
+    title: string;
+    description: string;
+    options: ApprovalOption[];
+    status: 'pending' | 'approved' | 'rejected';
+}
+
+export interface ApprovalOption {
+    id: string;
+    label: string;
+    value: string;
+}
+
+export interface FileData {
+    fileName: string;
+    fileSize: number;
+    fileType: string;
+    fileUrl: string;
 }
 
 export interface ChatModalProps {
@@ -130,7 +185,19 @@ export interface AgentWorkspaceConfig {
     helpMessages: string[];
 }
 
-// Interfaces para Admin Dashboard
+// Interfaces para Clientes
+export interface ClientData {
+    id: number;
+    name: string;
+    domain?: string;
+    isActive: boolean;
+    settings?: Record<string, any>;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+// Interfaces para Integrations
+export type IntegrationType = 'webhook' | 'n8n' | 'dify' | 'langchain';
 
 export interface WebhookIntegration {
     type: 'webhook';
@@ -147,16 +214,39 @@ export interface N8NIntegration {
     headers?: Record<string, string>;
 }
 
+export interface DifyIntegration {
+    type: 'dify';
+    apiUrl: string;
+    apiKey: string;
+    appId?: string;
+    userId?: string;
+}
+
 export interface LangChainIntegration {
     type: 'langchain';
     apiUrl: string;
-    apiKey: string;
+    apiKey?: string;
     agentId?: string;
     model?: string;
+    headers?: Record<string, string>;
 }
 
-export type AgentIntegration = WebhookIntegration | N8NIntegration | LangChainIntegration;
+export type AgentIntegration = WebhookIntegration | N8NIntegration | DifyIntegration | LangChainIntegration;
 
+export interface IntegrationConfig {
+    id: number;
+    clientId: number;
+    agentId?: number;
+    integrationType: IntegrationType;
+    name: string;
+    config: AgentIntegration;
+    isActive: boolean;
+    priority: number;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+// Interfaces para Admin Dashboard
 export interface AgentConfiguration {
     id: string;
     name: string;
@@ -164,7 +254,33 @@ export interface AgentConfiguration {
     type: string;
     act: string; // Ex: "Ato 01", "Ato 02"
     status: 'active' | 'disabled';
+    behaviorType: 'autonomous' | 'interagent';
+    canCommunicateWithAgents: boolean;
     integration: AgentIntegration;
     createdAt: Date;
     updatedAt: Date;
+}
+
+// Interfaces para Comunicação entre Agentes
+export interface AgentConversationData {
+    id: number;
+    clientId: number;
+    initiatorAgentId: number;
+    participantAgentIds: number[];
+    purpose?: string;
+    status: 'active' | 'completed' | 'cancelled';
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+export interface AgentMessageData {
+    id: number;
+    agentConversationId: number;
+    senderAgentId: number;
+    receiverAgentId?: number;
+    content: string;
+    messageType: 'request' | 'response' | 'notification' | 'error';
+    metadata?: Record<string, any>;
+    status: 'sent' | 'delivered' | 'read' | 'failed';
+    timestamp: Date;
 }

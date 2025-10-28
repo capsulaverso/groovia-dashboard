@@ -38,6 +38,36 @@ export interface AITestResponse {
   latencyMs: number;
 }
 
+export interface N8NIntegrationConfig {
+  n8nUrl: string;
+  workflowId?: string;
+  headers?: Record<string, string>;
+}
+
+export interface DifyIntegrationConfig {
+  apiUrl: string;
+  apiKey: string;
+  appId?: string;
+  userId?: string;
+}
+
+export interface LangchainIntegrationConfig {
+  apiUrl: string;
+  apiKey?: string;
+  agentId?: string;
+  model?: string;
+  headers?: Record<string, string>;
+}
+
+export interface AgentMessageRequest {
+  clientId: number;
+  senderAgentId: number;
+  receiverAgentId: number;
+  content: string;
+  messageType?: string;
+  metadata?: Record<string, any>;
+}
+
 const getCacheKey = (provider: string, model: string, systemPrompt: string, message: string): string => {
   return `ai:${provider}:${model}:${Buffer.from(systemPrompt + message).toString('base64').substring(0, 50)}`;
 };
@@ -60,6 +90,105 @@ const callWebhook = async (webhookUrl: string, data: any): Promise<any> => {
     return await response.json();
   } catch (error) {
     throw new Error(`Webhook error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
+
+const callN8N = async (config: N8NIntegrationConfig, data: any): Promise<any> => {
+  try {
+    const url = config.workflowId 
+      ? `${config.n8nUrl}/webhook/${config.workflowId}`
+      : config.n8nUrl;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...config.headers,
+      },
+      body: JSON.stringify(data),
+      signal: AbortSignal.timeout(30000)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`N8N returned status ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    throw new Error(`N8N error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
+
+const callDify = async (config: DifyIntegrationConfig, message: string, userId?: string): Promise<any> => {
+  try {
+    const response = await fetch(`${config.apiUrl}/chat-messages`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${config.apiKey}`,
+      },
+      body: JSON.stringify({
+        inputs: {},
+        query: message,
+        user: userId || config.userId || 'default-user',
+        response_mode: 'blocking',
+      }),
+      signal: AbortSignal.timeout(30000)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Dify returned status ${response.status}`);
+    }
+    
+    const result = await response.json();
+    return result.answer || result;
+  } catch (error) {
+    throw new Error(`Dify error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
+
+const callLangchain = async (config: LangchainIntegrationConfig, message: string, systemPrompt?: string): Promise<any> => {
+  try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...config.headers,
+    };
+    
+    if (config.apiKey) {
+      headers['Authorization'] = `Bearer ${config.apiKey}`;
+    }
+    
+    const body: any = {
+      input: message,
+    };
+    
+    if (systemPrompt) {
+      body.system_message = systemPrompt;
+    }
+    
+    if (config.agentId) {
+      body.agent_id = config.agentId;
+    }
+    
+    if (config.model) {
+      body.model = config.model;
+    }
+    
+    const response = await fetch(config.apiUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30000)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Langchain returned status ${response.status}`);
+    }
+    
+    const result = await response.json();
+    return result.output || result.response || result;
+  } catch (error) {
+    throw new Error(`Langchain error: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 };
 
@@ -207,4 +336,60 @@ export const clearCache = (pattern?: string): number => {
 
 export const getCacheStats = () => {
   return cache.getStats();
+};
+
+export const executeIntegration = async (
+  integrationType: string,
+  config: any,
+  message: string,
+  systemPrompt?: string,
+  userId?: string
+): Promise<any> => {
+  try {
+    switch (integrationType.toLowerCase()) {
+      case 'n8n':
+        return await callN8N(config as N8NIntegrationConfig, { message, systemPrompt });
+      
+      case 'dify':
+        return await callDify(config as DifyIntegrationConfig, message, userId);
+      
+      case 'langchain':
+        return await callLangchain(config as LangchainIntegrationConfig, message, systemPrompt);
+      
+      case 'webhook':
+        return await callWebhook(config.webhookUrl || config.url, { message, systemPrompt });
+      
+      default:
+        throw new Error(`Unsupported integration type: ${integrationType}`);
+    }
+  } catch (error) {
+    console.error(`Integration ${integrationType} error:`, error);
+    throw error;
+  }
+};
+
+export const routeAgentMessage = async (request: AgentMessageRequest): Promise<any> => {
+  try {
+    const messageData = {
+      clientId: request.clientId,
+      senderAgentId: request.senderAgentId,
+      receiverAgentId: request.receiverAgentId,
+      content: request.content,
+      messageType: request.messageType || 'request',
+      metadata: request.metadata || {},
+      timestamp: new Date().toISOString()
+    };
+    
+    return {
+      success: true,
+      messageData,
+      status: 'routed'
+    };
+  } catch (error) {
+    console.error('Agent message routing error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
 };
