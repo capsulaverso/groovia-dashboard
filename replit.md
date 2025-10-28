@@ -31,6 +31,7 @@ The application follows a modular component-based architecture with clear separa
 - **InfoItem**: Informational card components for the right aside
 - **InstructionBox**: Reusable component for displaying instructions, guidance, warnings, and announcements throughout the system with closeable functionality and action buttons
 - **AgentCard**: Interactive card component with animated progress bars, circular context indicator, and clickable workspace integration for AI agent interactions
+- **UserMenu**: Dropdown menu component activated by clicking user avatar, featuring user info header, quick access to Documents and Settings, and logout functionality with click-outside-to-close behavior
 
 **Agent Workspace System (Full-Page Dedicated Interface):**
 - **AgentWorkspace**: Main workspace container with three-panel layout providing dedicated full-page environment for agent interactions

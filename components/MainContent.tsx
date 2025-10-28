@@ -5,6 +5,7 @@ import ScanCard from './ScanCard';
 import InstructionBox from './InstructionBox';
 import AgentCard from './AgentCard';
 import AgentWorkspace from './AgentWorkspace';
+import UserMenu from './UserMenu';
 import { generateWorkspaceConfig } from '../utils/agentWorkspaceConfig';
 import { populateExampleConversations } from '../utils/populateConversations';
 import type { AgentCardData, AgentWorkspaceConfig } from '../types';
@@ -22,7 +23,10 @@ const Header: React.FC = () => (
                 <span className="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-secondary-light dark:text-on-surface-secondary-dark">search</span>
                 <input className="w-full bg-surface-light dark:bg-surface-dark border-none rounded-full pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary" placeholder="Buscar" type="text" />
             </div>
-            <img alt="User avatar" className="w-10 h-10 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHehMaLwX5FDrppcqyfR8_WZ2Nh2sVdULdI2FxynCOHtkFjBCyNyqmKL77GMdcwtwovu7pGDDrvazKcqQY7LDSZRLGAr1fZzOckKhk0vHc3uSdVv3ENWda0G02NwtxD_0HlT0cklB0TOypj8Y8XMxiGNjUFgj-VnVxdpMRK4dQ1Qu1Nah36Qn5uCs4748X1evhK_jvpHUcb7ap4R2EdfN92zKp2p_PPRIJ2A5npIg7nGwkjAl80YD0iEc0J62Jvvz597HjREDWqDHZ" />
+            <UserMenu 
+                userName="João Silva"
+                userEmail="joao.silva@groovia.com"
+            />
         </div>
     </header>
 );
