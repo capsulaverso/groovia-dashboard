@@ -25,3 +25,29 @@ export interface InstructionBoxProps {
     variant?: 'info' | 'warning' | 'success' | 'error';
     icon?: string;
 }
+
+export interface AgentCardData {
+    id: string;
+    title: string;
+    description: string;
+    contextProgress: number; // Porcentagem de contexto preenchido (0-100)
+    act: string; // Ex: "Ato 01", "Ato 02"
+    internalCode: string; // Código interno para controle de recursos/tokens
+    agentType: string; // Tipo do agente para configurar o chat
+}
+
+export interface ChatMessage {
+    id: string;
+    sender: 'user' | 'agent';
+    message: string;
+    timestamp: Date;
+}
+
+export interface ChatModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    agentTitle: string;
+    agentDescription: string;
+    agentType: string;
+    internalCode: string;
+}
