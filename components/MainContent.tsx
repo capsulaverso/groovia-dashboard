@@ -1,9 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { SCAN_CARDS_DATA, ANALYSIS_CARDS_DATA, AGENT_CARDS_DATA } from '../constants';
 import ScanCard from './ScanCard';
 import InstructionBox from './InstructionBox';
 import AgentCard from './AgentCard';
+import AgentWorkspace from './AgentWorkspace';
+import { generateWorkspaceConfig } from '../utils/agentWorkspaceConfig';
+import type { AgentCardData, AgentWorkspaceConfig } from '../types';
 
 const Header: React.FC = () => (
     <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -24,6 +27,21 @@ const Header: React.FC = () => (
 );
 
 const MainContent: React.FC = () => {
+    const [activeWorkspace, setActiveWorkspace] = useState<AgentWorkspaceConfig | null>(null);
+
+    const handleOpenWorkspace = (agent: AgentCardData) => {
+        const config = generateWorkspaceConfig(agent);
+        setActiveWorkspace(config);
+    };
+
+    const handleCloseWorkspace = () => {
+        setActiveWorkspace(null);
+    };
+
+    if (activeWorkspace) {
+        return <AgentWorkspace config={activeWorkspace} onClose={handleCloseWorkspace} />;
+    }
+
     return (
         <main className="flex-1 p-6">
             <Header />
@@ -128,7 +146,7 @@ const MainContent: React.FC = () => {
                             act={agent.act}
                             internalCode={agent.internalCode}
                             agentType={agent.agentType}
-                            onClick={() => console.log(`Abrindo agente: ${agent.title}`)}
+                            onClick={() => handleOpenWorkspace(agent)}
                         />
                     ))}
                 </div>

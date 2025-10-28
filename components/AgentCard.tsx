@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import ProgressRing from './ProgressRing';
-import ChatModal from './ChatModal';
 import type { AgentCardData } from '../types';
 
 interface AgentCardProps extends Omit<AgentCardData, 'id'> {
@@ -16,19 +15,15 @@ const AgentCard: React.FC<AgentCardProps> = ({
     agentType,
     onClick 
 }) => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
-
     const handleCardClick = () => {
-        setIsModalOpen(true);
         onClick?.();
     };
 
     return (
-        <>
-            <div 
-                className="bg-surface-light dark:bg-surface-dark p-6 rounded-2xl flex flex-col justify-between cursor-pointer hover:shadow-lg transition-shadow duration-300"
-                onClick={handleCardClick}
-            >
+        <div 
+            className="bg-surface-light dark:bg-surface-dark p-6 rounded-2xl flex flex-col justify-between cursor-pointer hover:shadow-lg transition-shadow duration-300"
+            onClick={handleCardClick}
+        >
                 <div>
                     {/* Ícone do Agente */}
                     <div className="flex items-center justify-end mb-4">
@@ -69,17 +64,6 @@ const AgentCard: React.FC<AgentCardProps> = ({
                     </span>
                 </div>
             </div>
-
-            {/* Modal de Chat */}
-            <ChatModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                agentTitle={title}
-                agentDescription={description}
-                agentType={agentType}
-                internalCode={internalCode}
-            />
-        </>
     );
 };
 
