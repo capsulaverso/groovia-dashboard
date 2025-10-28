@@ -24,12 +24,13 @@ The application follows a modular component-based architecture with clear separa
 **Dashboard Components:**
 - **App.tsx**: Root component implementing a three-column flex layout (Sidebar, MainContent, RightAside)
 - **Sidebar**: Left navigation panel featuring branding and theme toggle functionality
-- **MainContent**: Central content area displaying plugin cards, scan progress, chat history, and admin panel access
+- **MainContent**: Central content area displaying plugin cards, scan progress, chat history, and admin panel access. Features dynamic "Continue de onde parou" section with real-time user progress tracking
 - **RightAside**: Right information panel for contextual help and actions
 - **ScanCard**: Reusable card component for displaying plugin/agent status with progress indicators
 - **ProgressRing**: SVG-based circular progress indicator using stroke-dashoffset animation
 - **InfoItem**: Informational card components for the right aside
 - **InstructionBox**: Reusable component for displaying instructions, guidance, warnings, and announcements throughout the system with closeable functionality and action buttons
+- **FloatingTooltip**: Portal-based overlay component with dynamic positioning, auto-flip placement when space is constrained, animated entrance/exit, arrow indicators, and ESC/click-outside-to-close behavior. Renders offscreen initially (-9999px) to resolve circular dependency, allowing dimension measurement before final positioning
 - **AgentCard**: Interactive card component with animated progress bars, circular context indicator, and clickable workspace integration for AI agent interactions
 - **UserMenu**: Dropdown menu component activated by clicking user avatar, featuring user info header, quick access to Documents, Settings, Admin Panel (for admins), and logout functionality with click-outside-to-close behavior
 
@@ -47,9 +48,12 @@ The application follows a modular component-based architecture with clear separa
 - **WorkspaceRightSidebar**: Information panel with tabbed interface for documents (client files with preview/download) and help (contextual messages and interactive tooltips with target references)
 
 **State Management:**
-- Custom React hooks pattern (`useTheme`) for theme management
-- LocalStorage for theme persistence
-- Component-level state using React hooks (useState, useEffect)
+- Custom React hooks pattern (`useTheme`, `useUserProgress`, `useTooltipPositioning`) for cross-cutting concerns
+- `useTheme`: Theme management with localStorage persistence
+- `useUserProgress`: User progress tracking with localStorage persistence (current agent, step, act, context progress, internal code)
+- `useTooltipPositioning`: Dynamic tooltip positioning with auto-flip and viewport boundary detection
+- LocalStorage for theme and progress persistence
+- Component-level state using React hooks (useState, useEffect, useRef)
 
 **Design Patterns:**
 - Composition pattern for building UI from smaller, reusable components
@@ -70,6 +74,9 @@ TypeScript interfaces defined in `types.ts`:
 - `ScanCardData`: Structure for plugin/agent card information
 - `InfoItemData`: Structure for informational items in right sidebar
 - `InstructionBoxProps`: Structure for instruction/notification boxes with variants (info, warning, success, error), action callbacks, and close functionality
+- `FloatingTooltipProps`: Structure for floating tooltip overlays with dynamic positioning, variants, action callbacks, and placement preferences (top, bottom, left, right)
+- `TooltipPosition`: Position data for tooltip placement including top/left coordinates, final placement, and arrow position
+- `UserProgressData`: User progress state structure including current agent, step, description, act, context progress, agent type, and internal tracking code
 - `AgentCardData`: Structure for interactive agent cards with context progress, act phase, internal tracking codes, and agent type classification
 
 *Workspace Types:*
