@@ -132,7 +132,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
                     </MenuSection>
 
                     {isAdmin && (
-                        <MenuSection title="Administração" isCollapsible={true} defaultCollapsed={false}>
+                        <MenuSection title="Administração" isCollapsible={true} defaultCollapsed={true}>
                             <MenuItem
                                 icon="group"
                                 label="Usuários"
