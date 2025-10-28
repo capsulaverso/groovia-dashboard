@@ -122,3 +122,41 @@ export interface AgentWorkspaceConfig {
     // Mensagens de ajuda
     helpMessages: string[];
 }
+
+// Interfaces para Admin Dashboard
+
+export interface WebhookIntegration {
+    type: 'webhook';
+    webhookUrl: string;
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+    headers?: Record<string, string>;
+    timeout?: number;
+}
+
+export interface N8NIntegration {
+    type: 'n8n';
+    n8nUrl: string;
+    workflowId?: string;
+    headers?: Record<string, string>;
+}
+
+export interface LangChainIntegration {
+    type: 'langchain';
+    apiUrl: string;
+    apiKey: string;
+    agentId?: string;
+    model?: string;
+}
+
+export type AgentIntegration = WebhookIntegration | N8NIntegration | LangChainIntegration;
+
+export interface AgentConfiguration {
+    id: string;
+    name: string;
+    description: string;
+    type: string;
+    status: 'active' | 'disabled';
+    integration: AgentIntegration;
+    createdAt: Date;
+    updatedAt: Date;
+}

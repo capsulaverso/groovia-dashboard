@@ -4,12 +4,14 @@ interface UserMenuProps {
     userName?: string;
     userEmail?: string;
     avatarUrl?: string;
+    onAdminClick?: () => void;
 }
 
 const UserMenu: React.FC<UserMenuProps> = ({
     userName = 'Usuário',
     userEmail = 'usuario@groovia.com',
-    avatarUrl = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAHehMaLwX5FDrppcqyfR8_WZ2Nh2sVdULdI2FxynCOHtkFjBCyNyqmKL77GMdcwtwovu7pGDDrvazKcqQY7LDSZRLGAr1fZzOckKhk0vHc3uSdVv3ENWda0G02NwtxD_0HlT0cklB0TOypj8Y8XMxiGNjUFgj-VnVxdpMRK4dQ1Qu1Nah36Qn5uCs4748X1evhK_jvpHUcb7ap4R2EdfN92zKp2p_PPRIJ2A5npIg7nGwkjAl80YD0iEc0J62Jvvz597HjREDWqDHZ'
+    avatarUrl = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAHehMaLwX5FDrppcqyfR8_WZ2Nh2sVdULdI2FxynCOHtkFjBCyNyqmKL77GMdcwtwovu7pGDDrvazKcqQY7LDSZRLGAr1fZzOckKhk0vHc3uSdVv3ENWda0G02NwtxD_0HlT0cklB0TOypj8Y8XMxiGNjUFgj-VnVxdpMRK4dQ1Qu1Nah36Qn5uCs4748X1evhK_jvpHUcb7ap4R2EdfN92zKp2p_PPRIJ2A5npIg7nGwkjAl80YD0iEc0J62Jvvz597HjREDWqDHZ',
+    onAdminClick
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -36,6 +38,11 @@ const UserMenu: React.FC<UserMenuProps> = ({
         setIsOpen(false);
         
         switch (action) {
+            case 'admin':
+                if (onAdminClick) {
+                    onAdminClick();
+                }
+                break;
             case 'documentos':
                 alert('Abrindo Documentos...');
                 break;
@@ -92,6 +99,30 @@ const UserMenu: React.FC<UserMenuProps> = ({
 
                     {/* Menu Items */}
                     <div className="py-2">
+                        {/* Administração (Admin Only) */}
+                        {onAdminClick && (
+                            <>
+                                <button
+                                    onClick={() => handleMenuItemClick('admin')}
+                                    className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors text-left"
+                                >
+                                    <span className="material-icons-outlined text-primary text-xl">admin_panel_settings</span>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium text-on-surface-light dark:text-on-surface-dark">
+                                            Administração
+                                        </p>
+                                        <p className="text-xs text-on-surface-secondary-light dark:text-on-surface-secondary-dark">
+                                            Gerenciar agentes e integrações
+                                        </p>
+                                    </div>
+                                    <span className="material-icons-outlined text-gray-400 text-sm">
+                                        chevron_right
+                                    </span>
+                                </button>
+                                <div className="my-2 border-t border-gray-200 dark:border-gray-700" />
+                            </>
+                        )}
+
                         {/* Documentos */}
                         <button
                             onClick={() => handleMenuItemClick('documentos')}

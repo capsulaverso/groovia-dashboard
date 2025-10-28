@@ -24,14 +24,21 @@ The application follows a modular component-based architecture with clear separa
 **Dashboard Components:**
 - **App.tsx**: Root component implementing a three-column flex layout (Sidebar, MainContent, RightAside)
 - **Sidebar**: Left navigation panel featuring branding and theme toggle functionality
-- **MainContent**: Central content area displaying plugin cards, scan progress, and chat history
+- **MainContent**: Central content area displaying plugin cards, scan progress, chat history, and admin panel access
 - **RightAside**: Right information panel for contextual help and actions
 - **ScanCard**: Reusable card component for displaying plugin/agent status with progress indicators
 - **ProgressRing**: SVG-based circular progress indicator using stroke-dashoffset animation
 - **InfoItem**: Informational card components for the right aside
 - **InstructionBox**: Reusable component for displaying instructions, guidance, warnings, and announcements throughout the system with closeable functionality and action buttons
 - **AgentCard**: Interactive card component with animated progress bars, circular context indicator, and clickable workspace integration for AI agent interactions
-- **UserMenu**: Dropdown menu component activated by clicking user avatar, featuring user info header, quick access to Documents and Settings, and logout functionality with click-outside-to-close behavior
+- **UserMenu**: Dropdown menu component activated by clicking user avatar, featuring user info header, quick access to Documents, Settings, Admin Panel (for admins), and logout functionality with click-outside-to-close behavior
+
+**Administrative Components:**
+- **AdminDashboard**: Full administrative interface for managing AI agents with CRUD operations (Create, Read, Update, Delete)
+- **AgentConfigModal**: Modal component for creating and editing agent configurations with support for three integration types:
+  - **WebHook Integration**: Custom HTTP endpoints with configurable methods (GET, POST, PUT, DELETE), headers, and timeout settings
+  - **N8N Integration**: Workflow automation platform integration with workflow ID and custom webhook URLs
+  - **LangChain Integration**: AI agent framework integration with API key management, model selection (GPT-4, GPT-3.5, Claude 3, Gemini Pro), and agent ID configuration
 
 **Agent Workspace System (Full-Page Dedicated Interface):**
 - **AgentWorkspace**: Main workspace container with three-panel layout providing dedicated full-page environment for agent interactions
@@ -126,6 +133,16 @@ Custom color system defined in Tailwind config:
 - Pre-configured settings for 7 agent types with unique internal codes (AGT-SC-001 through AGT-BR-007) for resource tracking
 - Each agent has customized functions, context data, help messages, and tooltips relevant to their specialty
 - `getConversationHistory()`: Generates agent-specific conversation history with realistic past sessions showing titles, last messages, timestamps, and message counts
+
+**Administrative Features:**
+- **Agent Management**: Create, edit, delete, enable/disable AI agents
+- **Integration Support**: Three integration types with full configuration:
+  - WebHook: Direct HTTP endpoint integration with custom headers and methods
+  - N8N: Workflow automation platform for visual workflow design and execution
+  - LangChain: AI agent framework for building conversational AI with multiple LLM providers
+- **Status Control**: Real-time activation/deactivation of agents without deletion
+- **Search & Filter**: Advanced filtering by status (active/disabled) and keyword search
+- **Statistics Dashboard**: Live metrics showing total agents, active count, and disabled count
 
 **Example Conversations System (utils/populateConversations.ts):**
 - Pre-populated conversation examples for demonstration purposes

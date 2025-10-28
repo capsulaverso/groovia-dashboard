@@ -5,12 +5,17 @@ import ScanCard from './ScanCard';
 import InstructionBox from './InstructionBox';
 import AgentCard from './AgentCard';
 import AgentWorkspace from './AgentWorkspace';
+import AdminDashboard from './AdminDashboard';
 import UserMenu from './UserMenu';
 import { generateWorkspaceConfig } from '../utils/agentWorkspaceConfig';
 import { populateExampleConversations } from '../utils/populateConversations';
 import type { AgentCardData, AgentWorkspaceConfig } from '../types';
 
-const Header: React.FC = () => (
+interface HeaderProps {
+    onAdminClick: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onAdminClick }) => (
     <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
             <h1 className="text-on-surface-light dark:text-on-surface-dark text-lg font-medium">Plugins</h1>
@@ -26,6 +31,7 @@ const Header: React.FC = () => (
             <UserMenu 
                 userName="João Silva"
                 userEmail="joao.silva@groovia.com"
+                onAdminClick={onAdminClick}
             />
         </div>
     </header>
@@ -33,6 +39,7 @@ const Header: React.FC = () => (
 
 const MainContent: React.FC = () => {
     const [activeWorkspace, setActiveWorkspace] = useState<AgentWorkspaceConfig | null>(null);
+    const [showAdmin, setShowAdmin] = useState(false);
 
     // Popular conversas de exemplo na primeira vez que o componente carregar
     useEffect(() => {
@@ -52,13 +59,44 @@ const MainContent: React.FC = () => {
         setActiveWorkspace(null);
     };
 
+    const handleOpenAdmin = () => {
+        setShowAdmin(true);
+    };
+
+    const handleCloseAdmin = () => {
+        setShowAdmin(false);
+    };
+
     if (activeWorkspace) {
         return <AgentWorkspace config={activeWorkspace} onClose={handleCloseWorkspace} />;
     }
 
+    if (showAdmin) {
+        return (
+            <div className="flex flex-col h-screen">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <span className="material-icons-outlined text-primary text-2xl">admin_panel_settings</span>
+                        <h1 className="text-xl font-bold text-on-surface-light dark:text-on-surface-dark">
+                            Painel Administrativo
+                        </h1>
+                    </div>
+                    <button
+                        onClick={handleCloseAdmin}
+                        className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    >
+                        <span className="material-icons-outlined">arrow_back</span>
+                        <span className="text-sm font-medium">Voltar ao Dashboard</span>
+                    </button>
+                </div>
+                <AdminDashboard />
+            </div>
+        );
+    }
+
     return (
         <main className="flex-1 p-6">
-            <Header />
+            <Header onAdminClick={handleOpenAdmin} />
 
             <div className="mb-6">
                 <InstructionBox
