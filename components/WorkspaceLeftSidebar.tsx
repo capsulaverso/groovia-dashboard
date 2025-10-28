@@ -68,12 +68,17 @@ const WorkspaceLeftSidebar: React.FC<WorkspaceLeftSidebarProps> = ({
                 </div>
             </div>
 
-            {/* Histórico de Conversas */}
+            {/* Histórico de Conversas - Dados de Sessão */}
             <div className="flex-1 overflow-y-auto p-4">
-                <h2 className="text-sm font-semibold text-on-surface-light dark:text-on-surface-dark mb-3 flex items-center gap-2">
-                    <span className="material-icons-outlined text-primary text-lg">history</span>
-                    Histórico de Conversas
-                </h2>
+                <div className="mb-3">
+                    <h2 className="text-sm font-semibold text-on-surface-light dark:text-on-surface-dark flex items-center gap-2">
+                        <span className="material-icons-outlined text-primary text-lg">history</span>
+                        Dados de Sessão
+                    </h2>
+                    <p className="text-xs text-on-surface-secondary-light dark:text-on-surface-secondary-dark mt-1">
+                        O histórico das conversas, para que um utilizador possa continuar de onde parou.
+                    </p>
+                </div>
                 <div className="space-y-2">
                     {conversationHistory.length === 0 ? (
                         <p className="text-xs text-on-surface-secondary-light dark:text-on-surface-secondary-dark text-center py-8">
@@ -84,23 +89,43 @@ const WorkspaceLeftSidebar: React.FC<WorkspaceLeftSidebarProps> = ({
                             <button
                                 key={conversation.id}
                                 onClick={() => onSelectConversation(conversation.id)}
-                                className={`w-full text-left p-3 rounded-lg transition-colors ${
+                                className={`w-full text-left p-3 rounded-lg transition-all ${
                                     activeConversationId === conversation.id
                                         ? 'bg-primary/10 border-2 border-primary'
-                                        : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                        : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-primary/30'
                                 }`}
                             >
-                                <h3 className="text-sm font-medium text-on-surface-light dark:text-on-surface-dark mb-1 truncate">
+                                <h3 className="text-sm font-medium text-on-surface-light dark:text-on-surface-dark mb-2 truncate">
                                     {conversation.title}
                                 </h3>
-                                <p className="text-xs text-on-surface-secondary-light dark:text-on-surface-secondary-dark truncate mb-2">
-                                    {conversation.lastMessage}
-                                </p>
-                                <div className="flex items-center justify-between text-xs text-on-surface-secondary-light dark:text-on-surface-secondary-dark">
-                                    <span>{formatDate(conversation.timestamp)}</span>
-                                    <span className="flex items-center gap-1">
-                                        <span className="material-icons-outlined text-xs">chat_bubble_outline</span>
-                                        {conversation.messageCount}
+                                
+                                {/* Última mensagem do cliente */}
+                                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-md p-2 mb-2">
+                                    <div className="flex items-start gap-2 mb-1">
+                                        <span className="material-icons-outlined text-xs text-primary mt-0.5">person</span>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-medium text-on-surface-light dark:text-on-surface-dark">
+                                                Você:
+                                            </p>
+                                            <p className="text-xs text-on-surface-secondary-light dark:text-on-surface-secondary-dark line-clamp-2 mt-0.5">
+                                                {conversation.lastMessage}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Botão Continuar e Metadata */}
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3 text-xs text-on-surface-secondary-light dark:text-on-surface-secondary-dark">
+                                        <span>{formatDate(conversation.timestamp)}</span>
+                                        <span className="flex items-center gap-1">
+                                            <span className="material-icons-outlined text-xs">chat_bubble_outline</span>
+                                            {conversation.messageCount}
+                                        </span>
+                                    </div>
+                                    <span className="text-xs text-primary font-medium flex items-center gap-1">
+                                        Continuar
+                                        <span className="material-icons-outlined text-sm">arrow_forward</span>
                                     </span>
                                 </div>
                             </button>

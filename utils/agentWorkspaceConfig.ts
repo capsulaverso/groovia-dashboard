@@ -233,21 +233,21 @@ const getConversationHistory = (agentType: string) => {
             {
                 id: 'conv-diag-1',
                 title: 'Análise Completa do Negócio',
-                lastMessage: 'Perfeito! Vou revisar os insights sobre operações amanhã.',
+                lastMessage: 'Perfeito! Vou revisar os insights sobre operações amanhã e depois quero discutir o plano de ação.',
                 timestamp: yesterday,
                 messageCount: 34
             },
             {
                 id: 'conv-diag-2',
                 title: 'Diagnóstico Financeiro Q3',
-                lastMessage: 'Os indicadores de liquidez precisam de atenção urgente.',
+                lastMessage: 'Preciso de uma análise mais profunda dos indicadores de liquidez. Pode detalhar?',
                 timestamp: lastWeek,
                 messageCount: 28
             },
             {
                 id: 'conv-diag-3',
                 title: 'Avaliação de Processos Internos',
-                lastMessage: 'Obrigado pelas sugestões de otimização!',
+                lastMessage: 'Obrigado pelas sugestões! Vou implementar e te atualizo na próxima semana.',
                 timestamp: twoWeeksAgo,
                 messageCount: 19
             }
@@ -256,21 +256,21 @@ const getConversationHistory = (agentType: string) => {
             {
                 id: 'conv-pesq-1',
                 title: 'Pesquisa de Mercado - Setor Tech',
-                lastMessage: 'Vamos aprofundar na análise de concorrentes B2B.',
+                lastMessage: 'Ótimo! Agora vamos aprofundar na análise de concorrentes B2B. Quais são os 3 principais?',
                 timestamp: yesterday,
                 messageCount: 42
             },
             {
                 id: 'conv-pesq-2',
                 title: 'Definição do ICP Principal',
-                lastMessage: 'O perfil de empresas 50-200 funcionários está muito claro agora.',
+                lastMessage: 'Perfeito! O perfil de empresas 50-200 funcionários ficou claro. Pode detalhar as dores deles?',
                 timestamp: twoDaysAgo,
                 messageCount: 31
             },
             {
                 id: 'conv-pesq-3',
                 title: 'Tendências de Consumo 2025',
-                lastMessage: 'Preciso dos dados sobre comportamento mobile.',
+                lastMessage: 'Preciso dos dados sobre comportamento mobile e também sobre e-commerce. Pode buscar?',
                 timestamp: lastWeek,
                 messageCount: 25
             }
@@ -279,21 +279,21 @@ const getConversationHistory = (agentType: string) => {
             {
                 id: 'conv-estrat-1',
                 title: 'Planejamento Estratégico 2025-2027',
-                lastMessage: 'Os OKRs do pilar de Crescimento ficaram excelentes!',
+                lastMessage: 'Os OKRs do pilar de Crescimento ficaram excelentes! Agora quero definir os do pilar Operacional.',
                 timestamp: yesterday,
                 messageCount: 38
             },
             {
                 id: 'conv-estrat-2',
                 title: 'Análise SWOT Atualizada',
-                lastMessage: 'Vamos incluir as novas oportunidades de parcerias.',
+                lastMessage: 'Vamos incluir as novas oportunidades de parcerias com fintechs. O que você acha?',
                 timestamp: twoDaysAgo,
                 messageCount: 27
             },
             {
                 id: 'conv-estrat-3',
                 title: 'Roadmap de Expansão',
-                lastMessage: 'A estratégia go-to-market está bem definida.',
+                lastMessage: 'Gostei da estratégia go-to-market. Pode detalhar o plano de lançamento por região?',
                 timestamp: lastWeek,
                 messageCount: 33
             }
@@ -302,21 +302,21 @@ const getConversationHistory = (agentType: string) => {
             {
                 id: 'conv-creat-1',
                 title: 'Criação de Personas - Projeto Alpha',
-                lastMessage: 'A persona "Gestor Inovador" está perfeita para nosso ICP!',
+                lastMessage: 'A persona "Gestor Inovador" está perfeita! Agora vamos criar a "CEO Visionário"?',
                 timestamp: yesterday,
                 messageCount: 29
             },
             {
                 id: 'conv-creat-2',
                 title: 'Desenvolvimento de Brand Voice',
-                lastMessage: 'O tom de voz técnico mas acessível funcionou bem.',
+                lastMessage: 'Gostei do tom técnico mas acessível. Pode criar exemplos de posts para LinkedIn?',
                 timestamp: twoDaysAgo,
                 messageCount: 22
             },
             {
                 id: 'conv-creat-3',
                 title: 'Estratégia de Conteúdo Q4',
-                lastMessage: 'Vamos focar em cases de sucesso para próxima campanha.',
+                lastMessage: 'Vamos focar em cases de sucesso. Quantos posts você recomenda por semana?',
                 timestamp: lastWeek,
                 messageCount: 36
             }
@@ -325,21 +325,21 @@ const getConversationHistory = (agentType: string) => {
             {
                 id: 'conv-brand-1',
                 title: 'Reposicionamento de Marca',
-                lastMessage: 'O novo posicionamento "Inovação Acessível" ressoou muito bem!',
+                lastMessage: 'O posicionamento "Inovação Acessível" ressoou bem! Agora vamos definir o tagline?',
                 timestamp: yesterday,
                 messageCount: 41
             },
             {
                 id: 'conv-brand-2',
                 title: 'Análise de Percepção de Marca',
-                lastMessage: 'Os insights sobre como o mercado nos vê foram reveladores.',
+                lastMessage: 'Os insights foram reveladores. Como melhoramos a percepção de confiança da marca?',
                 timestamp: twoDaysAgo,
                 messageCount: 30
             },
             {
                 id: 'conv-brand-3',
                 title: 'Guia de Identidade Visual',
-                lastMessage: 'A paleta de cores e tipografia estão aprovadas.',
+                lastMessage: 'Paleta e tipografia aprovadas! Pode criar mockups de aplicação da marca?',
                 timestamp: lastWeek,
                 messageCount: 24
             }
@@ -351,14 +351,14 @@ const getConversationHistory = (agentType: string) => {
         {
             id: 'conv-gen-1',
             title: 'Sessão de Trabalho Anterior',
-            lastMessage: 'Ótima conversa! Vamos continuar em breve.',
+            lastMessage: 'Ótima conversa! Vamos continuar na próxima sessão com os novos dados.',
             timestamp: yesterday,
             messageCount: 18
         },
         {
             id: 'conv-gen-2',
             title: 'Análise Inicial',
-            lastMessage: 'Os próximos passos estão bem definidos.',
+            lastMessage: 'Os próximos passos estão definidos. Pode me ajudar com a implementação?',
             timestamp: lastWeek,
             messageCount: 12
         }
