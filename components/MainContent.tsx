@@ -147,8 +147,8 @@ const MainContent: React.FC = () => {
                     <h2 className="text-2xl font-semibold text-on-surface-light dark:text-on-surface-dark">Continue de onde parou</h2>
                     <span className="text-xs font-medium text-on-surface-secondary-light dark:text-on-surface-secondary-dark bg-surface-light dark:bg-surface-dark px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700">Ato 02</span>
                 </div>
-                <div className="flex flex-col md:flex-row gap-6 items-start">
-                    <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-2xl shrink-0">
+                <div className="flex flex-col md:flex-row gap-6 items-start relative z-10">
+                    <div className="bg-surface-light dark:bg-surface-dark p-6 rounded-2xl shrink-0 relative z-10">
                         <div className="flex items-center justify-end mb-4">
                             <div className="relative inline-flex items-center justify-center bg-primary rounded-full w-7 h-7">
                                 <div className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full bg-white"></div>
@@ -160,7 +160,7 @@ const MainContent: React.FC = () => {
                             <div className="h-3.5 bg-green-400 rounded-full w-24"></div>
                         </div>
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 relative z-10">
                         <h3 className="text-2xl font-bold mb-2 text-on-surface-light dark:text-on-surface-dark">Groovia Intelligence</h3>
                         <p className="text-on-surface-secondary-light dark:text-on-surface-secondary-dark text-sm leading-relaxed mb-6">
                             Criar uma robusta e completa estratégia corporativa que seja o ponto de partida para planejamento Tático e Operacional se guiarem. Aqui é interessante o Agente trabalhar em conjunto com o cliente em uma conversa fluída.

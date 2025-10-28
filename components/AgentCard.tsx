@@ -21,7 +21,7 @@ const AgentCard: React.FC<AgentCardProps> = ({
 
     return (
         <div 
-            className="bg-surface-light dark:bg-surface-dark p-6 rounded-2xl flex flex-col justify-between cursor-pointer hover:shadow-lg transition-shadow duration-300"
+            className="bg-surface-light dark:bg-surface-dark p-6 rounded-2xl flex flex-col justify-between cursor-pointer hover:shadow-lg transition-shadow duration-300 relative z-10"
             onClick={handleCardClick}
         >
                 <div>
