@@ -155,6 +155,7 @@ export interface AgentConfiguration {
     name: string;
     description: string;
     type: string;
+    act: string; // Ex: "Ato 01", "Ato 02"
     status: 'active' | 'disabled';
     integration: AgentIntegration;
     createdAt: Date;

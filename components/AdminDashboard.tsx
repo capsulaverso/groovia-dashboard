@@ -9,6 +9,7 @@ const AdminDashboard: React.FC = () => {
             name: 'SCAN CLARITY',
             description: 'Agente de diagnóstico completo de negócio',
             type: 'Agente de Diagnóstico',
+            act: 'Ato 01',
             status: 'active',
             integration: {
                 type: 'webhook',
@@ -27,6 +28,7 @@ const AdminDashboard: React.FC = () => {
             name: 'Market Research',
             description: 'Agente de pesquisa de mercado e ICP',
             type: 'Agente de Pesquisa',
+            act: 'Ato 02',
             status: 'active',
             integration: {
                 type: 'n8n',
@@ -41,6 +43,7 @@ const AdminDashboard: React.FC = () => {
             name: 'Strategy Planner',
             description: 'Agente estratégico para planejamento',
             type: 'Agente Estratégico',
+            act: 'Ato 03',
             status: 'disabled',
             integration: {
                 type: 'langchain',
@@ -253,6 +256,9 @@ const AdminDashboard: React.FC = () => {
                                         <h3 className="text-xl font-semibold text-on-surface-light dark:text-on-surface-dark">
                                             {agent.name}
                                         </h3>
+                                        <span className="text-xs font-medium text-on-surface-secondary-light dark:text-on-surface-secondary-dark bg-surface-light dark:bg-surface-dark px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700">
+                                            {agent.act}
+                                        </span>
                                         {getIntegrationBadge(agent.integration.type)}
                                         <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
                                             agent.status === 'active' 

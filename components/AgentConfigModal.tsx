@@ -11,6 +11,7 @@ const AgentConfigModal: React.FC<AgentConfigModalProps> = ({ agent, onSave, onCl
     const [name, setName] = useState(agent?.name || '');
     const [description, setDescription] = useState(agent?.description || '');
     const [type, setType] = useState(agent?.type || 'Agente de Diagnóstico');
+    const [act, setAct] = useState(agent?.act || 'Ato 01');
     const [integrationType, setIntegrationType] = useState<'webhook' | 'n8n' | 'langchain'>(
         agent?.integration.type || 'webhook'
     );
@@ -116,6 +117,7 @@ const AgentConfigModal: React.FC<AgentConfigModalProps> = ({ agent, onSave, onCl
                 name: name.trim(),
                 description: description.trim(),
                 type,
+                act: act.trim(),
                 status: agent?.status || 'active',
                 integration,
                 createdAt: agent?.createdAt || new Date(),
@@ -174,19 +176,38 @@ const AgentConfigModal: React.FC<AgentConfigModalProps> = ({ agent, onSave, onCl
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-semibold text-on-surface-light dark:text-on-surface-dark mb-2">
-                            Tipo de Agente
-                        </label>
-                        <select
-                            value={type}
-                            onChange={(e) => setType(e.target.value)}
-                            className="w-full bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary"
-                        >
-                            {agentTypes.map((t) => (
-                                <option key={t} value={t}>{t}</option>
-                            ))}
-                        </select>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-semibold text-on-surface-light dark:text-on-surface-dark mb-2">
+                                Tipo de Agente
+                            </label>
+                            <select
+                                value={type}
+                                onChange={(e) => setType(e.target.value)}
+                                className="w-full bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary"
+                            >
+                                {agentTypes.map((t) => (
+                                    <option key={t} value={t}>{t}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-semibold text-on-surface-light dark:text-on-surface-dark mb-2">
+                                Tag (Ato) *
+                            </label>
+                            <select
+                                value={act}
+                                onChange={(e) => setAct(e.target.value)}
+                                className="w-full bg-surface-light dark:bg-surface-dark border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary"
+                            >
+                                <option value="Ato 01">Ato 01</option>
+                                <option value="Ato 02">Ato 02</option>
+                                <option value="Ato 03">Ato 03</option>
+                                <option value="Ato 04">Ato 04</option>
+                                <option value="Ato 05">Ato 05</option>
+                            </select>
+                        </div>
                     </div>
 
                     {/* Integration Type */}
