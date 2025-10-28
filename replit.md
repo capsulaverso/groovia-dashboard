@@ -20,6 +20,7 @@ Preferred communication style: Simple, everyday language.
 **Component Architecture:**
 The application follows a modular component-based architecture with clear separation of concerns:
 
+**Dashboard Components:**
 - **App.tsx**: Root component implementing a three-column flex layout (Sidebar, MainContent, RightAside)
 - **Sidebar**: Left navigation panel featuring branding and theme toggle functionality
 - **MainContent**: Central content area displaying plugin cards, scan progress, and chat history
@@ -28,8 +29,13 @@ The application follows a modular component-based architecture with clear separa
 - **ProgressRing**: SVG-based circular progress indicator using stroke-dashoffset animation
 - **InfoItem**: Informational card components for the right aside
 - **InstructionBox**: Reusable component for displaying instructions, guidance, warnings, and announcements throughout the system with closeable functionality and action buttons
-- **AgentCard**: Interactive card component with animated progress bars, circular context indicator, and clickable modal interaction for AI agent chat interfaces
-- **ChatModal**: Full-featured chat interface modal with message history, typing indicators, auto-scroll, and state reset functionality
+- **AgentCard**: Interactive card component with animated progress bars, circular context indicator, and clickable workspace integration for AI agent interactions
+
+**Agent Workspace System (Full-Page Dedicated Interface):**
+- **AgentWorkspace**: Main workspace container with three-panel layout providing dedicated full-page environment for agent interactions
+- **WorkspaceLeftSidebar**: Conversation history panel displaying past conversations with timestamps, active conversation highlighting, and context data visualization (phases, progress, metrics)
+- **WorkspaceChatArea**: Central chat interface with message history, agent-specific functions (clickable action buttons), markdown support for formatted messages, and localStorage-based conversation persistence
+- **WorkspaceRightSidebar**: Information panel with tabbed interface for documents (client files with preview/download) and help (contextual messages and interactive tooltips with target references)
 
 **State Management:**
 - Custom React hooks pattern (`useTheme`) for theme management
@@ -50,12 +56,21 @@ The application follows a modular component-based architecture with clear separa
 
 **Type System:**
 TypeScript interfaces defined in `types.ts`:
+
+*Dashboard Types:*
 - `ScanCardData`: Structure for plugin/agent card information
 - `InfoItemData`: Structure for informational items in right sidebar
 - `InstructionBoxProps`: Structure for instruction/notification boxes with variants (info, warning, success, error), action callbacks, and close functionality
 - `AgentCardData`: Structure for interactive agent cards with context progress, act phase, internal tracking codes, and agent type classification
+
+*Workspace Types:*
+- `AgentFunction`: Configuration for agent-specific action buttons (id, label, icon, description)
+- `DocumentItem`: Client document metadata (id, name, type, size, uploadDate, preview link)
+- `ConversationHistory`: Conversation metadata for history panel (id, title, timestamp, messageCount)
+- `ContextData`: Agent context information (currentPhase, contextProgress, analysisDepth, dataPoints)
+- `TooltipConfig`: Interactive tooltip configuration (id, target, position, title, content)
+- `AgentWorkspaceConfig`: Complete workspace configuration including metadata, functions, documents, context, help messages, and tooltips
 - `ChatMessage`: Message structure for chat interface with sender identification, content, and timestamps
-- `ChatModalProps`: Configuration for chat modal including agent metadata and modal state controls
 
 ## Build and Development
 
@@ -101,11 +116,17 @@ Custom color system defined in Tailwind config:
 
 **Static Data Constants (constants.ts):**
 - `SCAN_CARDS_DATA`: Array of diagnostic scan plugin configurations
-- `ANALYSIS_CARDS_DATA`: Array of analysis agent configurations (partially shown)
-- `INFO_ITEMS_DATA`: Array of informational items (referenced but not shown in files)
+- `ANALYSIS_CARDS_DATA`: Array of analysis agent configurations with 7 pre-configured agents (SCAN CLARITY, Market Research, Persona Creation, Behavioral Analysis, Brand Strategy, Cross-Channel Strategy, Innovation Strategy)
+- `INFO_ITEMS_DATA`: Array of informational items for right sidebar
+
+**Workspace Configuration System (utils/agentWorkspaceConfig.ts):**
+- `getAgentWorkspaceConfig()`: Factory function generating complete workspace configuration based on agent type
+- Pre-configured settings for 7 agent types with unique internal codes (AGT-SC-001 through AGT-BR-007) for resource tracking
+- Each agent has customized functions, context data, help messages, and tooltips relevant to their specialty
 
 **Data Flow:**
-Constants → Component Props → Rendering via map functions
+- Dashboard: Constants → Component Props → Rendering via map functions
+- Workspace: Agent Type → Configuration Factory → Workspace Components → LocalStorage Persistence
 
 # External Dependencies
 
