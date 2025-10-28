@@ -37,14 +37,14 @@ interface MenuItemProps {
 const MenuItem: React.FC<MenuItemProps> = ({ icon, label, isActive, onClick, badge }) => (
     <button
         onClick={onClick}
-        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+        className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${
             isActive
                 ? 'bg-primary text-white shadow-lg shadow-primary/30'
                 : 'text-on-surface-secondary-light dark:text-on-surface-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-800'
         }`}
     >
-        <span className="material-icons-outlined text-xl">{icon}</span>
-        <span className="font-medium text-sm flex-1 text-left">{label}</span>
+        <span className="material-icons-outlined text-lg">{icon}</span>
+        <span className="font-normal text-xs flex-1 text-left">{label}</span>
         {badge && (
             <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-semibold">
                 {badge}
@@ -96,7 +96,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
     const { isAdmin } = useUser();
 
     return (
-        <aside className="w-64 p-6 hidden lg:block">
+        <aside className="w-80 p-6 hidden lg:block">
             <div className="bg-surface-light dark:bg-surface-dark w-full h-full rounded-2xl flex flex-col p-6 sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
                 <div className="flex items-center justify-between mb-8">
                     <GrooviaLogo />
