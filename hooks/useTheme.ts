@@ -10,12 +10,8 @@ export const useTheme = () => {
             return savedTheme;
         }
         
-        // Verifica se o sistema prefere tema escuro
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            return 'dark';
-        }
-        
-        return 'light';
+        // Padrão: modo escuro
+        return 'dark';
     });
 
     useEffect(() => {
