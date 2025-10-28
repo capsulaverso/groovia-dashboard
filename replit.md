@@ -27,6 +27,7 @@ The application follows a modular component-based architecture with clear separa
 - **ScanCard**: Reusable card component for displaying plugin/agent status with progress indicators
 - **ProgressRing**: SVG-based circular progress indicator using stroke-dashoffset animation
 - **InfoItem**: Informational card components for the right aside
+- **InstructionBox**: Reusable component for displaying instructions, guidance, warnings, and announcements throughout the system with closeable functionality and action buttons
 
 **State Management:**
 - Custom React hooks pattern (`useTheme`) for theme management
@@ -49,6 +50,7 @@ The application follows a modular component-based architecture with clear separa
 TypeScript interfaces defined in `types.ts`:
 - `ScanCardData`: Structure for plugin/agent card information
 - `InfoItemData`: Structure for informational items in right sidebar
+- `InstructionBoxProps`: Structure for instruction/notification boxes with variants (info, warning, success, error), action callbacks, and close functionality
 
 ## Build and Development
 
