@@ -22,6 +22,12 @@ export const agents = pgTable('agents', {
   agentType: text('agent_type').notNull(),
   integrations: jsonb('integrations').notNull().default('[]'),
   isActive: boolean('is_active').notNull().default(true),
+  aiModel: text('ai_model').default('gpt-4o-mini'),
+  aiProvider: text('ai_provider').default('replit'),
+  systemPrompt: text('system_prompt').default('Você é um assistente inteligente e prestativo.'),
+  fallbackPrompt: text('fallback_prompt').default('Desculpe, houve um erro ao processar sua solicitação. Por favor, tente novamente.'),
+  webhookUrl: text('webhook_url'),
+  webhookEnabled: boolean('webhook_enabled').notNull().default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
