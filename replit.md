@@ -15,7 +15,7 @@ Default theme: Light mode (tema claro).
 **Database:** PostgreSQL 16 (Neon-backed) with Drizzle ORM for type-safe operations.
 **API:** Express.js RESTful API handling CRUD for users, agents, documents, conversations, and messages.
 **Security:** bcryptjs for password hashing, environment-based credentials.
-**Schema:** Includes `users` (auth, roles), `agents` (AI agent configs with IA fields), `documents` (LGPD compliant), `conversations`, `messages`, and `userProgress`.
+**Schema:** Multi-tenant architecture with `clients` table and clientId in all relevant tables. Includes `users` (auth, roles), `agents` (AI agent configs with behaviorType, communication settings), `documents` (LGPD compliant), `conversations`, `messages` (with messageType and metadata for rich content), `integrations` (N8N, Langchain, Dify support), `agent_conversations` and `agent_messages` (inter-agent communication), and `userProgress`.
 **AI Integration:** Multi-provider AI system (Groovia Intelligence Nativo 1.0, OpenAI, Groq) with intelligent caching, webhook support, and fallback mechanisms.
 **AI Service:** `server/aiService.ts` - Centralized AI service with node-cache (1h TTL), webhook-first execution, and comprehensive error handling.
 
@@ -26,7 +26,8 @@ Default theme: Light mode (tema claro).
 **Component Architecture:** Modular, component-based with clear separation of concerns.
 - **Dashboard Components:** `App.tsx` (routing), `Sidebar` (adaptive navigation), `MainContent` (dashboard home), `RightAside` (contextual help), `ScanCard`, `ProgressRing`, `InfoItem`, `InstructionBox`, `FloatingTooltip`, `AgentCard`, `UserMenu`.
 - **Content Pages:** `DocumentsPage`, `MyAgentsPage`, `ProfilePage`, informational pages (`DocsPage`, `PrivacyPage`, `EULAPage`), and admin pages (`UsersManagementPage`, `ReportsPage`, `AgentsControlPage`).
-- **Agent Workspace System:** Dedicated full-page interface with `AgentWorkspace` (three-panel layout), `WorkspaceLeftSidebar` (conversation history), `WorkspaceChatArea` (central chat with markdown), `WorkspaceRightSidebar` (documents/help).
+- **Agent Workspace System:** Dedicated full-page interface with `AgentWorkspace` (three-panel layout), `WorkspaceLeftSidebar` (conversation history), `WorkspaceChatArea` (central chat with markdown and rich message components), `WorkspaceRightSidebar` (documents/help).
+- **Message Components:** Reusable message renderers for different response types: `MessageRenderer` (orchestrator), `TextMessage`, `ChartMessage`, `DocumentMessage`, `LinkMessage`, `ApprovalMessage` (with multilingual detection).
 **State Management:** Custom React hooks (`useTheme`, `useUser`, `useUserProgress`, `useTooltipPositioning`, `useApi`) for cross-cutting concerns and `localStorage` for persistence.
 **Design Patterns:** Composition, custom hooks, props-based communication, Presentational/Container components.
 **Styling Strategy:** Tailwind CSS with dark mode support and custom color palette.
@@ -34,7 +35,10 @@ Default theme: Light mode (tema claro).
 **Administrative Features:** 
 - Agent management (CRUD, enable/disable, test functionality)
 - AI Configuration (provider, model, system prompt, fallback prompt)
-- Integration support (WebHook with fallback, N8N, LangChain)
+- Multi-tenant controls (clientId, agent isolation per client)
+- Behavior type management (autonomous vs interagent agents)
+- Inter-agent communication settings (allowed agents, capabilities)
+- Integration support (WebHook with fallback, N8N, LangChain, Dify)
 - Real-time agent testing with detailed metrics (latency, tokens, cache status)
 - Statistics and cache management
 **Data Architecture:** Static constants (`constants.ts`), `getAgentWorkspaceConfig()` factory for dynamic agent configurations, and example conversation system for demonstration.
@@ -90,6 +94,31 @@ Default theme: Light mode (tema claro).
   - Mobile (1 col) → Small (2 cols) → Large (3 cols) → XL (4 cols) → 2XL (6 cols)
   - Breakpoints otimizados para melhor uso do espaço em telas grandes
 - **Data Type Fix**: Integrations field now properly accepts JSON objects from database
+
+## Multi-Tenant Platform with Inter-Agent Communication (COMPLETE ✅)
+- **Database Schema**: 
+  - Added `clients` table for multi-tenancy isolation
+  - Extended all tables with `clientId` foreign keys
+  - Added agent behavior fields: `behaviorType` (autonomous/interagent), `canCommunicateWithAgents`, `allowedAgentIds`, `capabilities`
+  - Created `integrations` table (N8N, Langchain, Dify, webhook support per client)
+  - Created `agent_conversations` and `agent_messages` for inter-agent communication
+  - Extended messages with `messageType` and `metadata` for rich content
+- **Security**: ALL API endpoints enforce clientId validation from headers/query only (no request body) - zero cross-tenant data leakage
+- **Storage Layer**: Complete CRUD methods for clients, integrations, agent communication with ownership validation
+- **AI Service**: Extended with integration support (N8N, Dify, Langchain) and agent-to-agent routing
+- **Message Components**: 
+  - `MessageRenderer` - orchestrates all message types
+  - `TextMessage` - markdown support with dark mode
+  - `ChartMessage` - data visualization placeholder
+  - `DocumentMessage` - document preview with download
+  - `LinkMessage` - URL previews with icons
+  - `ApprovalMessage` - approval workflows with multilingual detection (EN/PT)
+- **AgentsControlPage Updates**:
+  - Interface updated with clientId, behaviorType, communication settings, capabilities
+  - Modal expanded with "Comportamento e Comunicação" section
+  - Visual badges for behavior type and communication status
+  - Conditional fields (allowedAgentIds only when communication enabled)
+  - **PARTIAL**: Missing integrations management UI and inter-agent communication testing interface
 
 # External Dependencies
 
