@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 
-const API_URL = 'http://localhost:3001/api';
+// Usar proxy do Vite - todas as requisições para /api serão redirecionadas automaticamente
+const API_URL = '/api';
 
 interface ApiResponse<T> {
   data: T | null;
@@ -18,6 +19,12 @@ export const useApi = <T,>(endpoint: string): ApiResponse<T> => {
   const refetch = () => setTrigger(prev => prev + 1);
 
   useEffect(() => {
+    // Não fazer requisição se o endpoint estiver vazio
+    if (!endpoint || endpoint === '') {
+      setLoading(false);
+      return;
+    }
+
     const fetchData = async () => {
       try {
         setLoading(true);

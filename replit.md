@@ -53,6 +53,15 @@ Default theme: Light mode (tema claro).
 
 # Recent Changes (October 28, 2025)
 
+## API Connectivity Fix (COMPLETE ✅)
+- **Problem**: Frontend não conseguia se conectar ao backend PostgreSQL para salvar agentes
+- **Root Cause**: Navegador bloqueava acesso direto à porta 3001 (API Server)
+- **Solution**: 
+  - Configurado proxy do Vite (`vite.config.ts`) para redirecionar `/api` → `http://localhost:3001`
+  - Simplificado `useApi.ts` para usar endpoint relativo `/api`
+  - Adicionado validação para endpoints vazios (evita requisições 404)
+- **Result**: Frontend e backend totalmente conectados via proxy
+
 ## AI Agent Testing System (COMPLETE ✅)
 - **Database Schema Updates**: Added AI configuration fields to agents table (ai_model, ai_provider, system_prompt, fallback_prompt, webhook_url, webhook_enabled)
 - **AI Service Implementation**: Multi-provider support (Groovia Intelligence Nativo 1.0, OpenAI, Groq) with intelligent caching and webhook integration
