@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { ChatMessage, AgentFunction } from '../types';
+import { MessageRenderer } from './messages';
 
 interface WorkspaceChatAreaProps {
     agentTitle: string;
@@ -23,6 +24,27 @@ const WorkspaceChatArea: React.FC<WorkspaceChatAreaProps> = ({
     const [isTyping, setIsTyping] = useState(false);
     const [showFunctions, setShowFunctions] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const handleApprovalAction = (requestId: string, optionId: string, optionValue: string) => {
+        setMessages(prev => prev.map(msg => {
+            if (msg.metadata?.approvalRequest?.requestId === requestId) {
+                const normalizedValue = optionValue.trim().toLowerCase().replace(/[_-\s]+/g, '');
+                const approvalValues = ['approve', 'approved', 'yes', 'allow', 'accept', 'confirm', 'ok', 'sim', 'autorizar', 'aceitar'];
+                const newStatus = approvalValues.includes(normalizedValue) ? 'approved' : 'rejected';
+                return {
+                    ...msg,
+                    metadata: {
+                        ...msg.metadata,
+                        approvalRequest: {
+                            ...msg.metadata.approvalRequest!,
+                            status: newStatus
+                        }
+                    }
+                };
+            }
+            return msg;
+        }));
+    };
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -183,7 +205,9 @@ const WorkspaceChatArea: React.FC<WorkspaceChatAreaProps> = ({
                                     : 'bg-surface-light dark:bg-surface-dark text-on-surface-light dark:text-on-surface-dark border border-gray-200 dark:border-gray-700'
                             }`}
                         >
-                            <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                            <div className="text-sm">
+                                <MessageRenderer message={msg} onApprovalAction={handleApprovalAction} />
+                            </div>
                             <span className={`text-xs mt-1 block ${
                                 msg.sender === 'user' ? 'text-purple-200' : 'text-on-surface-secondary-light dark:text-on-surface-secondary-dark'
                             }`}>
