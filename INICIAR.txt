@@ -1,0 +1,70 @@
+╔══════════════════════════════════════════════════════════════╗
+║     🚀 GROOVIA DASHBOARD - Guia de Inicialização            ║
+╚══════════════════════════════════════════════════════════════╝
+
+OPÇÃO 1: Usar Neon Database (Mais Simples - Gratuito)
+═══════════════════════════════════════════════════════
+
+1. Acesse: https://console.neon.tech
+2. Crie uma conta (grátis)
+3. Crie um novo projeto chamado "groovia"
+4. Copie a DATABASE_URL (clicar no botão "Copy")
+5. Cole a URL aqui:
+   ┌──────────────────────────────────────────────┐
+   │ Edite o arquivo .env                         │
+   │ Substitua: DATABASE_URL=...                  │
+   └──────────────────────────────────────────────┘
+
+6. Execute no terminal:
+   npm run db:push
+   npm run db:seed
+
+7. Inicie o sistema:
+   Terminal 1: npm run server
+   Terminal 2: npm run dev
+
+══════════════════════════════════════════════════════════════
+
+OPÇÃO 2: Usar Docker (Se você tem Docker Desktop instalado)
+══════════════════════════════════════════════════════════════
+
+1. Certifique-se que Docker Desktop está rodando
+2. Execute:
+   docker-compose up -d
+   
+3. Configure o .env:
+   DATABASE_URL=postgresql://groovia:groovia123@localhost:5432/groovia
+
+4. Execute:
+   npm run db:push
+   npm run db:seed
+
+5. Inicie o sistema:
+   Terminal 1: npm run server
+   Terminal 2: npm run dev
+
+══════════════════════════════════════════════════════════════
+
+📊 CREDENCIAIS PADRÃO (após db:seed)
+══════════════════════════════════════════════════════════════
+
+  Email: admin@groovia.com
+  Senha: admin123
+  
+  Email: usuario@groovia.com
+  Senha: user123
+
+══════════════════════════════════════════════════════════════
+
+🌐 ACESSOS
+══════════════════════════════════════════════════════════════
+
+  Frontend: http://localhost:5000
+  Backend:  http://localhost:3001
+
+══════════════════════════════════════════════════════════════
+
+💡 DICA: A opção Neon Database é a mais rápida e não requer 
+        instalação de nada adicional!
+
+

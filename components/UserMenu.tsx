@@ -108,9 +108,14 @@ const UserMenu: React.FC<UserMenuProps> = ({
                                 >
                                     <span className="material-icons-outlined text-primary text-xl">admin_panel_settings</span>
                                     <div className="flex-1">
+                                        <div className="flex items-center gap-2">
                                         <p className="text-sm font-medium text-on-surface-light dark:text-on-surface-dark">
                                             Administração
                                         </p>
+                                            <span className="text-xs bg-purple-500 text-white px-2 py-0.5 rounded-full font-semibold">
+                                                Admin
+                                            </span>
+                                        </div>
                                         <p className="text-xs text-on-surface-secondary-light dark:text-on-surface-secondary-dark">
                                             Gerenciar agentes e integrações
                                         </p>

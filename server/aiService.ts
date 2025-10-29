@@ -4,10 +4,14 @@ import NodeCache from 'node-cache';
 
 const cache = new NodeCache({ stdTTL: 3600 });
 
-const replitOpenAI = new OpenAI({
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY
-});
+// Vercel Gateway - Provider principal (corrigido para usar endpoint correto)
+const vercelGateway = process.env.VERCEL_GATEWAY_API_KEY ? new OpenAI({
+  baseURL: 'https://aigateway.dev/api/proxy',
+  apiKey: process.env.VERCEL_GATEWAY_API_KEY,
+  defaultHeaders: {
+    'X-Vercel-AI-Gateway-Key': process.env.VERCEL_GATEWAY_API_KEY
+  }
+}) : null;
 
 const externalOpenAI = process.env.OPENAI_API_KEY ? new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
@@ -18,7 +22,7 @@ const groqClient = process.env.GROQ_API_KEY ? new Groq({
 }) : null;
 
 export interface AITestRequest {
-  provider: 'replit' | 'openai' | 'groq';
+  provider: 'replit' | 'vercel-gateway' | 'openai' | 'groq';
   model: string;
   systemPrompt: string;
   testMessage: string;
@@ -236,8 +240,11 @@ export const testAIAgent = async (request: AITestRequest): Promise<AITestRespons
     let aiResponse: string;
     let tokensUsed: number | undefined;
 
-    if (request.provider === 'replit') {
-      const completion = await replitOpenAI.chat.completions.create({
+    if (request.provider === 'replit' || request.provider === 'vercel-gateway') {
+      if (!vercelGateway) {
+        throw new Error('Vercel Gateway não configurado');
+      }
+      const completion = await vercelGateway.chat.completions.create({
         model: request.model,
         messages: [
           { role: 'system', content: request.systemPrompt },

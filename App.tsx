@@ -16,7 +16,8 @@ import LoginPage from './components/pages/LoginPage';
 import { useUser } from './hooks/useUser';
 
 type ViewType = 'home' | 'documents' | 'my-agents' | 'profile' | 'docs' | 'privacy' | 'eula' | 
-                'users' | 'reports' | 'agents-control' | 'db-test';
+                'users' | 'reports' | 'agents-control' | 'db-test' |
+                'company' | 'strategy' | 'tactical' | 'marketing' | 'sales' | 'support';
 
 const App: React.FC = () => {
     const [currentView, setCurrentView] = useState<ViewType>('home');
@@ -50,6 +51,19 @@ const App: React.FC = () => {
                 return <AgentsControlPage />;
             case 'db-test':
                 return <DatabaseTestPage />;
+            // Novas views
+            case 'company':
+                return <div className="p-6"><h1 className="text-2xl font-bold mb-4">Empresa</h1><p>Página em desenvolvimento...</p></div>;
+            case 'strategy':
+                return <div className="p-6"><h1 className="text-2xl font-bold mb-4">Estratégia</h1><p>Página em desenvolvimento...</p></div>;
+            case 'tactical':
+                return <div className="p-6"><h1 className="text-2xl font-bold mb-4">Tático</h1><p>Página em desenvolvimento...</p></div>;
+            case 'marketing':
+                return <div className="p-6"><h1 className="text-2xl font-bold mb-4">Marketing</h1><p>Página em desenvolvimento...</p></div>;
+            case 'sales':
+                return <div className="p-6"><h1 className="text-2xl font-bold mb-4">Vendas</h1><p>Página em desenvolvimento...</p></div>;
+            case 'support':
+                return <div className="p-6"><h1 className="text-2xl font-bold mb-4">Atendimento</h1><p>Página em desenvolvimento...</p></div>;
             default:
                 return <MainContent />;
         }
@@ -61,7 +75,7 @@ const App: React.FC = () => {
             <main className="flex-1 p-6 overflow-y-auto">
                 {renderContent()}
             </main>
-            {currentView === 'home' && <RightAside />}
+            {currentView === 'home' && <RightAside activeView={currentView} onNavigate={setCurrentView} />}
         </div>
     );
 };

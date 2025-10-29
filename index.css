@@ -18,10 +18,33 @@
     }
 }
 
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
 .animate-fadeIn {
     animation: fadeIn 0.2s ease-out;
 }
 
 .animate-scaleIn {
     animation: scaleIn 0.2s ease-out;
+}
+
+.animate-shimmer {
+    animation: shimmer 3s infinite;
+}
+
+/* Esconde scrollbar mas mantém scroll */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
 }

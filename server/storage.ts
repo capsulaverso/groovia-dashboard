@@ -129,6 +129,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.clientId, clientId));
   }
 
+  async getUsers(clientId: number): Promise<User[]> {
+    return await this.getUsersByClient(clientId);
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const client = await this.getClient(insertUser.clientId);
     if (!client) {

@@ -104,82 +104,52 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
                 </div>
 
                 <nav className="flex-1 overflow-y-auto">
-                    <MenuSection title="Principal">
+                    {/* MENU PRINCIPAL - NOVOS ITENS */}
+                    <MenuSection title="Navegação">
                         <MenuItem
                             icon="home"
-                            label="Home"
+                            label="Início"
                             isActive={activeView === 'home'}
                             onClick={() => onNavigate('home')}
                         />
                         <MenuItem
-                            icon="folder"
-                            label="Meus Documentos"
-                            isActive={activeView === 'documents'}
-                            onClick={() => onNavigate('documents')}
+                            icon="business"
+                            label="Empresa"
+                            isActive={activeView === 'company'}
+                            onClick={() => onNavigate('company')}
                         />
                         <MenuItem
-                            icon="smart_toy"
-                            label="Meus Agentes"
-                            isActive={activeView === 'my-agents'}
-                            onClick={() => onNavigate('my-agents')}
+                            icon="flag"
+                            label="Estratégia"
+                            isActive={activeView === 'strategy'}
+                            onClick={() => onNavigate('strategy')}
                         />
                         <MenuItem
-                            icon="person"
-                            label="Meu Perfil"
-                            isActive={activeView === 'profile'}
-                            onClick={() => onNavigate('profile')}
+                            icon="track_changes"
+                            label="Tático"
+                            isActive={activeView === 'tactical'}
+                            onClick={() => onNavigate('tactical')}
+                        />
+                        <MenuItem
+                            icon="campaign"
+                            label="Marketing"
+                            isActive={activeView === 'marketing'}
+                            onClick={() => onNavigate('marketing')}
+                        />
+                        <MenuItem
+                            icon="shopping_cart"
+                            label="Vendas"
+                            isActive={activeView === 'sales'}
+                            onClick={() => onNavigate('sales')}
+                        />
+                        <MenuItem
+                            icon="support"
+                            label="Atendimento"
+                            isActive={activeView === 'support'}
+                            onClick={() => onNavigate('support')}
                         />
                     </MenuSection>
 
-                    {isAdmin && (
-                        <MenuSection title="Administração" isCollapsible={true} defaultCollapsed={true}>
-                            <MenuItem
-                                icon="group"
-                                label="Usuários"
-                                isActive={activeView === 'users'}
-                                onClick={() => onNavigate('users')}
-                            />
-                            <MenuItem
-                                icon="settings"
-                                label="Controle de Agentes"
-                                isActive={activeView === 'agents-control'}
-                                onClick={() => onNavigate('agents-control')}
-                            />
-                            <MenuItem
-                                icon="assessment"
-                                label="Relatórios"
-                                isActive={activeView === 'reports'}
-                                onClick={() => onNavigate('reports')}
-                            />
-                        </MenuSection>
-                    )}
-
-                    <MenuSection title="Sistema" isCollapsible={true} defaultCollapsed={true}>
-                        <MenuItem
-                            icon="description"
-                            label="Documentação"
-                            isActive={activeView === 'docs'}
-                            onClick={() => onNavigate('docs')}
-                        />
-                        <MenuItem
-                            icon="policy"
-                            label="Privacidade"
-                            isActive={activeView === 'privacy'}
-                            onClick={() => onNavigate('privacy')}
-                        />
-                        <MenuItem
-                            icon="gavel"
-                            label="EULA"
-                            isActive={activeView === 'eula'}
-                            onClick={() => onNavigate('eula')}
-                        />
-                        <MenuItem
-                            icon="storage"
-                            label="Teste do Banco"
-                            isActive={activeView === 'db-test'}
-                            onClick={() => onNavigate('db-test')}
-                        />
-                    </MenuSection>
                 </nav>
             </div>
         </aside>

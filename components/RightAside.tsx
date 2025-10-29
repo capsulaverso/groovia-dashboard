@@ -26,41 +26,48 @@ const InfoItem: React.FC<{
   onButtonClick?: () => void;
 }> = ({ title, description, buttonText, progress, onButtonClick }) => {
     return (
-        <div className="flex items-start gap-3 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <span className="material-icons-outlined text-green-500 mt-0.5">info</span>
-            <div className="flex-1">
-                <h4 className="font-medium text-on-surface-light dark:text-on-surface-dark mb-1">{title}</h4>
-                <p className="text-sm text-on-surface-secondary-light dark:text-on-surface-secondary-dark mb-2">
-                    {description}
-                </p>
+        <div className="flex items-center gap-3 p-3 bg-gradient-to-br from-surface-light to-surface-light/50 dark:from-surface-dark dark:to-surface-dark/50 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary/30 transition-all group">
+            {/* Mini ícone com status */}
+            <div className="relative flex-shrink-0">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <span className="material-icons-outlined text-primary text-lg">pending</span>
+                </div>
                 {progress !== undefined && (
-                    <div className="mb-2">
-                        <div className="flex items-center justify-between text-xs mb-1">
-                            <span className="text-gray-600 dark:text-gray-400">Progresso</span>
-                            <span className="font-semibold text-primary">{progress}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                            <div 
-                                className="bg-primary h-1.5 rounded-full transition-all duration-300"
-                                style={{ width: `${progress}%` }}
-                            />
-                        </div>
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-bold border-2 border-white dark:border-gray-800">
+                        {progress}%
                     </div>
                 )}
-                <button 
-                    onClick={onButtonClick}
-                    className="bg-primary text-white text-xs font-semibold px-4 py-1.5 rounded-lg hover:bg-primary/90 transition-colors w-full"
-                >
-                    {buttonText}
-                </button>
             </div>
+            
+            {/* Conteúdo compacto */}
+            <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-semibold text-on-surface-light dark:text-on-surface-dark truncate mb-0.5">
+                    {title}
+                </h4>
+                <p className="text-xs text-on-surface-secondary-light dark:text-on-surface-secondary-dark truncate">
+                    {description}
+                </p>
+            </div>
+            
+            {/* Botão minimalista */}
+            <button 
+                onClick={onButtonClick}
+                className="flex-shrink-0 text-primary hover:bg-primary/10 px-3 py-1.5 rounded-lg transition-colors text-xs font-semibold group-hover:scale-105"
+            >
+                {buttonText}
+            </button>
         </div>
     );
 };
 
-const RightAside: React.FC = () => {
+interface RightAsideProps {
+    activeView: string;
+    onNavigate: (view: string) => void;
+}
+
+const RightAside: React.FC<RightAsideProps> = ({ activeView, onNavigate }) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const { user } = useUser();
+    const { user, isAdmin } = useUser();
     
     // Apenas busca dados se houver usuário logado
     const shouldFetch = user !== null;
@@ -93,9 +100,46 @@ const RightAside: React.FC = () => {
         );
     }
 
+    const MenuItem: React.FC<{ icon: string; label: string; isActive?: boolean; badge?: string; onClick?: () => void }> = ({ icon, label, isActive, badge, onClick }) => (
+        <button
+            onClick={onClick}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-left ${
+                isActive
+                    ? 'bg-primary text-white shadow-lg shadow-primary/30'
+                    : 'text-on-surface-secondary-light dark:text-on-surface-secondary-dark hover:bg-gray-100 dark:hover:bg-gray-800'
+            }`}
+        >
+            <span className="material-icons-outlined text-lg">{icon}</span>
+            <span className="font-normal text-xs flex-1">{label}</span>
+            {badge && (
+                <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-semibold">
+                    {badge}
+                </span>
+            )}
+        </button>
+    );
+
+    const MenuSection: React.FC<{ title: string; children: React.ReactNode; badge?: string }> = ({ title, children, badge }) => (
+        <div className="mb-6">
+            <div className="flex items-center gap-2 px-4 mb-3">
+                <h3 className="text-xs font-semibold text-on-surface-secondary-light dark:text-on-surface-secondary-dark uppercase tracking-wider">
+                {title}
+            </h3>
+                {badge && (
+                    <span className="text-xs bg-purple-500 text-white px-2 py-0.5 rounded-full font-semibold">
+                        {badge}
+                    </span>
+                )}
+            </div>
+            <div className="space-y-1">
+                {children}
+            </div>
+        </div>
+    );
+
     return (
         <aside className="w-80 p-6 hidden xl:block">
-            <div className="w-full h-full flex flex-col gap-4 sticky top-6">
+            <div className="w-full h-full flex flex-col gap-6 sticky top-6 overflow-y-auto max-h-[calc(100vh-3rem)]">
                 <div className="flex items-center justify-between mb-2">
                     <h3 className="text-lg font-semibold text-on-surface-light dark:text-on-surface-dark">
                         Tarefas Pendentes
@@ -111,15 +155,16 @@ const RightAside: React.FC = () => {
                     </button>
                 </div>
 
+                {/* Tarefas Pendentes */}
                 {progressLoading ? (
                     <div className="flex items-center justify-center py-8">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                     </div>
                 ) : progressData && progressData.length > 0 ? (
-                    <div className="flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-8rem)]">
+                    <div className="flex flex-col gap-3">
                         {progressData
                             .filter(p => p.contextProgress < 100)
-                            .slice(0, 4)
+                            .slice(0, 3)
                             .map((progress) => {
                                 const agent = getAgentInfo(progress.agentId);
                                 return (
@@ -135,26 +180,94 @@ const RightAside: React.FC = () => {
                             })}
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <span className="material-icons-outlined text-gray-400 dark:text-gray-600 text-5xl mb-3">
+                    <div className="flex flex-col items-center justify-center py-8 text-center bg-surface-light dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-700">
+                        <span className="material-icons-outlined text-gray-400 dark:text-gray-600 text-4xl mb-2">
                             task_alt
                         </span>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                             Nenhuma tarefa pendente
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-500">
-                            Todas as atividades foram concluídas!
                         </p>
                     </div>
                 )}
 
-                {!progressLoading && progressData && progressData.length > 0 && (
-                    <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <div className="text-center text-xs text-gray-600 dark:text-gray-400">
-                            {progressData.filter(p => p.contextProgress === 100).length} de {progressData.length} tarefas concluídas
-                        </div>
-                    </div>
-                )}
+                {/* Menu: Ferramentas, Administração, Sistema */}
+                <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <nav className="space-y-6">
+                        {/* Ferramentas */}
+                        <MenuSection title="Ferramentas">
+                            <MenuItem
+                                icon="folder"
+                                label="Meus Documentos"
+                                isActive={activeView === 'documents'}
+                                onClick={() => onNavigate('documents')}
+                            />
+                            <MenuItem
+                                icon="smart_toy"
+                                label="Meus Agentes"
+                                isActive={activeView === 'my-agents'}
+                                onClick={() => onNavigate('my-agents')}
+                            />
+                            <MenuItem
+                                icon="person"
+                                label="Meu Perfil"
+                                isActive={activeView === 'profile'}
+                                onClick={() => onNavigate('profile')}
+                            />
+                        </MenuSection>
+
+                        {/* Administração */}
+                        {isAdmin && (
+                            <MenuSection title="Administração" badge="Admin">
+                                <MenuItem
+                                    icon="group"
+                                    label="Usuários"
+                                    isActive={activeView === 'users'}
+                                    onClick={() => onNavigate('users')}
+                                />
+                                <MenuItem
+                                    icon="settings"
+                                    label="Controle de Agentes"
+                                    isActive={activeView === 'agents-control'}
+                                    onClick={() => onNavigate('agents-control')}
+                                />
+                                <MenuItem
+                                    icon="assessment"
+                                    label="Relatórios"
+                                    isActive={activeView === 'reports'}
+                                    onClick={() => onNavigate('reports')}
+                                />
+                            </MenuSection>
+                        )}
+
+                        {/* Sistema */}
+                        <MenuSection title="Sistema">
+                            <MenuItem
+                                icon="description"
+                                label="Documentação"
+                                isActive={activeView === 'docs'}
+                                onClick={() => onNavigate('docs')}
+                            />
+                            <MenuItem
+                                icon="policy"
+                                label="Privacidade"
+                                isActive={activeView === 'privacy'}
+                                onClick={() => onNavigate('privacy')}
+                            />
+                            <MenuItem
+                                icon="gavel"
+                                label="EULA"
+                                isActive={activeView === 'eula'}
+                                onClick={() => onNavigate('eula')}
+                            />
+                            <MenuItem
+                                icon="storage"
+                                label="Teste do Banco"
+                                isActive={activeView === 'db-test'}
+                                onClick={() => onNavigate('db-test')}
+                            />
+                        </MenuSection>
+                    </nav>
+                </div>
             </div>
         </aside>
     );

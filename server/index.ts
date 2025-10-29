@@ -3,6 +3,15 @@ import cors from 'cors';
 import { storage } from './storage.js';
 import { comparePassword } from './auth.js';
 import { testAIAgent, clearCache, getCacheStats } from './aiService.js';
+import { trace, context, SpanStatusCode } from '@opentelemetry/api';
+
+// Initialize OpenTelemetry tracing
+const tracer = trace.getTracer('groovia-dashboard', '1.0.0');
+
+// Para desenvolvimento local sem banco configurado
+if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost:5432')) {
+  console.log('⚠️  Usando modo desenvolvimento com banco em memória');
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -16,6 +25,23 @@ app.get('/api/health', (req, res) => {
 });
 
 // Users
+app.get('/api/users', async (req, res) => {
+  try {
+    const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string);
+    if (!clientId) {
+      return res.status(400).json({ error: 'clientId is required' });
+    }
+    const users = await storage.getUsers(clientId);
+    const usersWithoutPassword = users.map(u => {
+      const { password, ...rest } = u;
+      return rest;
+    });
+    res.json(usersWithoutPassword);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar usuários' });
+  }
+});
+
 app.get('/api/users/:id', async (req, res) => {
   try {
     const user = await storage.getUser(parseInt(req.params.id));
@@ -26,6 +52,48 @@ app.get('/api/users/:id', async (req, res) => {
     res.json(userWithoutPassword);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar usuário' });
+  }
+});
+
+app.post('/api/users', async (req, res) => {
+  try {
+    const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string);
+    if (!clientId) {
+      return res.status(400).json({ error: 'clientId is required' });
+    }
+    const user = await storage.createUser({ ...req.body, clientId });
+    const { password, ...userWithoutPassword } = user;
+    res.status(201).json(userWithoutPassword);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Erro ao criar usuário';
+    res.status(500).json({ error: message });
+  }
+});
+
+app.put('/api/users/:id', async (req, res) => {
+  try {
+    const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string);
+    if (!clientId) {
+      return res.status(400).json({ error: 'clientId is required' });
+    }
+    const userId = parseInt(req.params.id);
+    const user = await storage.updateUser(userId, clientId, req.body);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+    const { password, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao atualizar usuário' });
+  }
+});
+
+app.delete('/api/users/:id', async (req, res) => {
+  try {
+    await storage.deleteUser(parseInt(req.params.id));
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao deletar usuário' });
   }
 });
 
@@ -52,16 +120,51 @@ app.post('/api/auth/login', async (req, res) => {
 
 // Agents (multi-tenant secured)
 app.get('/api/agents', async (req, res) => {
-  try {
-    const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string);
-    if (!clientId) {
-      return res.status(400).json({ error: 'clientId is required' });
+  const span = tracer.startSpan('GET /api/agents');
+  
+  return context.with(trace.setSpan(context.active(), span), async () => {
+    try {
+      const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string);
+      if (!clientId) {
+        console.error('❌ clientId is required');
+        span.setStatus({ code: SpanStatusCode.ERROR, message: 'clientId is required' });
+        span.end();
+        return res.status(400).json({ error: 'clientId is required' });
+      }
+      
+      span.setAttribute('app.clientId', clientId);
+      console.log('✅ Buscando agentes para clientId:', clientId);
+      
+      const agents = await storage.getAgents(clientId);
+      console.log('✅ Agentes encontrados:', agents?.length || 0);
+      
+      // Mapear para formato esperado pelo frontend
+      const formattedAgents = (agents || []).map(agent => ({
+        id: agent.id,
+        title: agent.title,
+        description: agent.description,
+        agentType: agent.agentType,
+        isActive: agent.isActive,
+        internalCode: agent.internalCode,
+        behaviorType: agent.behaviorType,
+        capabilities: agent.capabilities
+      }));
+      
+      span.setAttribute('app.agents.count', formattedAgents.length);
+      span.setStatus({ code: SpanStatusCode.OK });
+      span.end();
+      
+      res.json(formattedAgents || []);
+    } catch (error) {
+      span.recordException(error as Error);
+      span.setStatus({ code: SpanStatusCode.ERROR, message: error instanceof Error ? error.message : 'Erro' });
+      span.end();
+      
+      console.error('❌ Erro ao buscar agentes:', error);
+      const message = error instanceof Error ? error.message : 'Erro ao buscar agentes';
+      res.status(500).json({ error: message });
     }
-    const agents = await storage.getAgents(clientId);
-    res.json(agents);
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao buscar agentes' });
-  }
+  });
 });
 
 app.get('/api/agents/:id', async (req, res) => {
@@ -545,6 +648,95 @@ app.post('/api/agent-messages', async (req, res) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erro ao criar mensagem de agente';
     res.status(500).json({ error: message });
+  }
+});
+
+// Document Upload endpoint
+app.post('/api/documents/upload', async (req, res) => {
+  try {
+    const clientId = parseInt(req.headers['x-client-id'] as string) || parseInt(req.query.clientId as string);
+    if (!clientId) {
+      return res.status(400).json({ error: 'clientId is required' });
+    }
+
+    const { userId, fileName, mimeType, fileHash, extractedText, metadata, driveFileId } = req.body;
+    
+    if (!userId || !fileName || !mimeType || !fileHash) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Criar documento no banco
+    const document = await storage.createDocument({
+      clientId,
+      userId,
+      name: fileName,
+      type: mimeType,
+      size: 0, // Será calculado no frontend
+      retentionDays: 365,
+      isPrivate: false,
+      fileUrl: driveFileId || null,
+    });
+
+    // Armazenar conteúdo extraído se disponível
+    if (extractedText) {
+      // Em produção, salvar em tabela separada de conteúdo
+      console.log('Conteúdo extraído para hash:', fileHash);
+    }
+
+    res.status(201).json({ 
+      ...document, 
+      contentHash: fileHash,
+      extractedText: extractedText || null
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Erro ao fazer upload';
+    res.status(500).json({ error: message });
+  }
+});
+
+// Get document by hash (para agentes consultarem)
+app.get('/api/documents/hash/:hash', async (req, res) => {
+  try {
+    const clientId = parseInt(req.headers['x-client-id'] as string) || parseInt(req.query.clientId as string);
+    if (!clientId) {
+      return res.status(400).json({ error: 'clientId is required' });
+    }
+
+    const { hash } = req.params;
+    
+    // Buscar documento pelo hash
+    // Em produção, implementar busca em tabela de conteúdo
+    const document = await storage.getUserDocuments(0, clientId); // Placeholder
+    
+    if (!document || document.length === 0) {
+      return res.status(404).json({ error: 'Documento não encontrado' });
+    }
+
+    // Em produção, retornar conteúdo extraído
+    res.json({ 
+      hash, 
+      textContent: '[Conteúdo será implementado com conversores completos]' 
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao buscar documento' });
+  }
+});
+
+// Google Drive integration
+app.get('/api/drive/files', async (req, res) => {
+  try {
+    const clientId = parseInt(req.headers['x-client-id'] as string) || parseInt(req.query.clientId as string);
+    if (!clientId) {
+      return res.status(400).json({ error: 'clientId is required' });
+    }
+
+    // Em produção, usar googleDriveService
+    res.json({ 
+      files: [],
+      message: 'Google Drive não configurado. Configure GOOGLE_DRIVE_CLIENT_ID no .env'
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao listar arquivos do Drive' });
   }
 });
 

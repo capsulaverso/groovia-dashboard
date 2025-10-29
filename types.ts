@@ -133,6 +133,27 @@ export interface DocumentItem {
     url?: string;
 }
 
+// Tipos para documentos com Google Drive
+export interface DocumentUploadData {
+    name: string;
+    mimeType: string;
+    size: number;
+    contentHash: string;
+    extractedText?: string;
+    metadata?: Record<string, any>;
+    driveFileId?: string;
+    userId: number;
+    clientId: number;
+}
+
+export interface DocumentContent {
+    id: number;
+    documentId: string;
+    contentHash: string;
+    textContent: string;
+    extractedAt: Date;
+}
+
 export interface ConversationHistory {
     id: string;
     title: string;
