@@ -13,6 +13,9 @@ interface Agent {
     internalCode?: string;
     behaviorType?: string;
     capabilities?: any;
+    aiProvider?: string;
+    aiModel?: string;
+    systemPrompt?: string;
 }
 
 const MyAgentsPage: React.FC = () => {
@@ -218,7 +221,11 @@ const MyAgentsPage: React.FC = () => {
                     agentTitle={selectedAgent.title}
                     agentDescription={selectedAgent.description}
                     agentType={selectedAgent.agentType}
-                    internalCode={`AGT-${selectedAgent.id}`}
+                    internalCode={selectedAgent.internalCode || `AGT-${selectedAgent.id}`}
+                    agentId={selectedAgent.id}
+                    aiProvider={selectedAgent.aiProvider || 'replit'}
+                    aiModel={selectedAgent.aiModel || 'gpt-4o-mini'}
+                    systemPrompt={selectedAgent.systemPrompt || 'Você é um assistente inteligente e prestativo.'}
                 />
             )}
         </div>

@@ -46,27 +46,16 @@ const InstructionBox: React.FC<InstructionBoxProps> = ({
     };
 
     return (
-        <div className={`${variantStyles[variant]} p-4 rounded-2xl w-full md:w-auto border relative z-0`}>
+        <div className={`${variantStyles[variant]} rounded-2xl w-full md:w-auto border relative z-0`} style={{ padding: '10px 30px' }}>
             {showCloseButton && (
                 <button
                     onClick={handleClose}
                     className="absolute top-2 right-2 p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-on-surface-secondary-light dark:text-on-surface-secondary-dark"
                     aria-label="Fechar"
-                >
-                    <span className="material-icons-outlined text-base">close</span>
-                </button>
+                />
             )}
 
-            {icon && (
-                <div className="mb-3">
-                    <span className="material-icons-outlined text-primary">{icon}</span>
-                </div>
-            )}
-
-            <h4 className="font-semibold text-sm mb-1 text-on-surface-light dark:text-on-surface-dark pr-6">
-                {title}
-            </h4>
-            <p className="text-xs text-on-surface-secondary-light dark:text-on-surface-secondary-dark mb-3">
+            <p className="text-on-surface-secondary-light dark:text-on-surface-secondary-dark mb-3" style={{ color: 'rgb(107, 114, 128)', fontSize: '16px', fontWeight: 300, lineHeight: '28px' }}>
                 {description}
             </p>
 

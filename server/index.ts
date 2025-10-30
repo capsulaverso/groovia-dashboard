@@ -1,12 +1,17 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { storage } from './storage.js';
 import { comparePassword } from './auth.js';
 import { testAIAgent, clearCache, getCacheStats } from './aiService.js';
+import { n8nService } from './n8nService.js';
 import { trace, context, SpanStatusCode } from '@opentelemetry/api';
 
 // Initialize OpenTelemetry tracing
 const tracer = trace.getTracer('groovia-dashboard', '1.0.0');
+
+// Log DATABASE_URL status
+console.log('🔍 DATABASE_URL:', process.env.DATABASE_URL ? '✅ Configurada' : '❌ Não configurada');
 
 // Para desenvolvimento local sem banco configurado
 if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost:5432')) {
@@ -121,58 +126,58 @@ app.post('/api/auth/login', async (req, res) => {
 // Agents (multi-tenant secured)
 app.get('/api/agents', async (req, res) => {
   const span = tracer.startSpan('GET /api/agents');
-  
+
   return context.with(trace.setSpan(context.active(), span), async () => {
     try {
-      const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string);
-      if (!clientId) {
-        console.error('❌ clientId is required');
-        span.setStatus({ code: SpanStatusCode.ERROR, message: 'clientId is required' });
-        span.end();
-        return res.status(400).json({ error: 'clientId is required' });
-      }
-      
+      const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string) || 1;
+
       span.setAttribute('app.clientId', clientId);
       console.log('✅ Buscando agentes para clientId:', clientId);
-      
-      const agents = await storage.getAgents(clientId);
-      console.log('✅ Agentes encontrados:', agents?.length || 0);
-      
+
+      let agents;
+      try {
+        agents = await storage.getAgents(clientId);
+        console.log('✅ Agentes encontrados:', agents?.length || 0);
+      } catch (error) {
+        console.error('❌ Erro detalhado ao buscar agentes:', error);
+        console.error('❌ Stack:', error?.stack);
+        throw error;
+      }
+
       // Retornar todos os campos necessários do agente
-      const formattedAgents = (agents || []).map(agent => ({
+      const formattedAgents = (agents || []).map((agent: any) => ({
         id: agent.id,
         title: agent.title,
         description: agent.description,
-        agentType: agent.agentType,
-        isActive: agent.isActive,
-        internalCode: agent.internalCode,
-        behaviorType: agent.behaviorType,
-        capabilities: agent.capabilities,
+        agentType: agent.agent_type,
+        isActive: agent.is_active,
+        internalCode: agent.internal_code,
+        behaviorType: agent.behavior_type || 'autonomous',
+        capabilities: agent.capabilities || {},
         integrations: agent.integrations || [],
-        aiModel: agent.aiModel,
-        aiProvider: agent.aiProvider,
-        systemPrompt: agent.systemPrompt,
-        fallbackPrompt: agent.fallbackPrompt,
-        webhookUrl: agent.webhookUrl,
-        webhookEnabled: agent.webhookEnabled,
-        canCommunicateWithAgents: agent.canCommunicateWithAgents,
-        allowedAgentIds: agent.allowedAgentIds || [],
-        createdAt: agent.createdAt,
-        updatedAt: agent.updatedAt,
-        // Campo 'act' pode estar em capabilities ou metadata
+        aiModel: agent.ai_model || 'gpt-4o-mini',
+        aiProvider: agent.ai_provider || 'replit',
+        systemPrompt: agent.system_prompt || 'Você é um assistente inteligente e prestativo.',
+        fallbackPrompt: agent.fallback_prompt || 'Desculpe, houve um erro ao processar sua solicitação.',
+        webhookUrl: agent.webhook_url || '',
+        webhookEnabled: agent.webhook_enabled || false,
+        canCommunicateWithAgents: agent.can_communicate_with_agents || false,
+        allowedAgentIds: agent.allowed_agent_ids || [],
+        createdAt: agent.created_at,
+        updatedAt: agent.updated_at,
         act: (agent.capabilities as any)?.act || null
       }));
-      
+
       span.setAttribute('app.agents.count', formattedAgents.length);
       span.setStatus({ code: SpanStatusCode.OK });
       span.end();
-      
+
       res.json(formattedAgents || []);
     } catch (error) {
       span.recordException(error as Error);
       span.setStatus({ code: SpanStatusCode.ERROR, message: error instanceof Error ? error.message : 'Erro' });
       span.end();
-      
+
       console.error('❌ Erro ao buscar agentes:', error);
       const message = error instanceof Error ? error.message : 'Erro ao buscar agentes';
       res.status(500).json({ error: message });
@@ -400,13 +405,18 @@ app.post('/api/messages', async (req, res) => {
 // User Progress (multi-tenant secured)
 app.get('/api/users/:userId/progress', async (req, res) => {
   try {
-    const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string);
-    if (!clientId) {
-      return res.status(400).json({ error: 'clientId is required' });
+    const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string) || 1;
+    const userId = parseInt(req.params.userId);
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
     }
-    const progress = await storage.getUserProgress(parseInt(req.params.userId), clientId);
-    res.json(progress);
+
+    console.log(`📊 Buscando progresso do usuário ${userId} para clientId ${clientId}`);
+    const progress = await storage.getUserProgress(userId, clientId);
+    res.json(progress || []);
   } catch (error) {
+    console.error('❌ Erro ao buscar progresso:', error);
     const message = error instanceof Error ? error.message : 'Erro ao buscar progresso';
     res.status(500).json({ error: message });
   }
@@ -750,6 +760,84 @@ app.get('/api/drive/files', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao listar arquivos do Drive' });
+  }
+});
+
+// Agent Response - Integração com N8N
+app.post('/api/agents/:id/respond', async (req, res) => {
+  try {
+    const agentId = parseInt(req.params.id);
+    const { conversationId, message } = req.body;
+    const clientId = parseInt(req.headers['x-client-id'] as string) || parseInt(req.query.clientId as string) || 1;
+    const userId = parseInt(req.headers['x-user-id'] as string) || 1;
+
+    console.log(`🤖 Processando resposta do agente ${agentId}`);
+    console.log(`📨 Mensagem:`, message);
+    console.log(`🔑 clientId:`, clientId);
+
+    // Verificar se o agente existe
+    const agent = await storage.getAgent(agentId, clientId);
+    if (!agent) {
+      return res.status(404).json({ error: 'Agente não encontrado' });
+    }
+
+    // Buscar informações do cliente
+    const client = await storage.getClient(clientId);
+    if (!client) {
+      console.warn('⚠️ Cliente não encontrado para clientId:', clientId);
+    }
+
+    // Preparar dados para N8N
+    const agentName = agent.title;
+    const clientName = client?.name || 'Cliente Desconhecido';
+
+    console.log('📋 Dados completos:', {
+      agentName,
+      clientName,
+      message,
+      userId,
+      agentId,
+      conversationId
+    });
+
+    // Enviar mensagem para N8N
+    console.log('📤 Enviando para N8N...');
+    const n8nResponse = await n8nService.processMessage({
+      message,
+      agentName,
+      clientName,
+      userId,
+      agentId,
+      conversationId,
+    });
+
+    // Criar mensagem do agente no banco
+    const agentMessage = await storage.createMessage({
+      conversationId,
+      sender: 'agent',
+      content: n8nResponse,
+      messageType: 'text',
+      metadata: {
+        agentId,
+        processedByN8N: true,
+        timestamp: new Date().toISOString(),
+      },
+    }, clientId);
+
+    console.log('✅ Resposta do N8N processada com sucesso');
+
+    res.json({
+      success: true,
+      message: agentMessage,
+      n8nResponse: n8nResponse,
+    });
+  } catch (error) {
+    console.error('❌ Erro ao processar resposta do agente:', error);
+    const message = error instanceof Error ? error.message : 'Erro ao processar resposta';
+    res.status(500).json({ 
+      success: false, 
+      error: message 
+    });
   }
 });
 

@@ -2,17 +2,22 @@ import React, { useState, useEffect, useRef } from 'react';
 import type { ChatModalProps, ChatMessage } from '../types';
 import { MessageRenderer } from './messages';
 
-const ChatModal: React.FC<ChatModalProps> = ({ 
-    isOpen, 
-    onClose, 
-    agentTitle, 
-    agentDescription, 
+const ChatModal: React.FC<ChatModalProps> = ({
+    isOpen,
+    onClose,
+    agentTitle,
+    agentDescription,
     agentType,
-    internalCode 
+    internalCode,
+    agentId,
+    aiProvider = 'replit',
+    aiModel = 'gpt-4o-mini',
+    systemPrompt = 'Você é um assistente inteligente e prestativo.'
 }) => {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [inputMessage, setInputMessage] = useState('');
     const [isTyping, setIsTyping] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const handleApprovalAction = (requestId: string, optionId: string, optionValue: string) => {
@@ -61,7 +66,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
         }
     }, [isOpen, agentTitle, agentDescription]);
 
-    const handleSendMessage = () => {
+    const handleSendMessage = async () => {
         if (!inputMessage.trim()) return;
 
         const userText = inputMessage;
@@ -77,18 +82,53 @@ const ChatModal: React.FC<ChatModalProps> = ({
         setMessages(prev => [...prev, userMessage]);
         setInputMessage('');
         setIsTyping(true);
+        setError(null);
 
-        // Simula resposta do agente (aqui você integraria com a API do Gemini)
-        setTimeout(() => {
+        try {
+            // Chama a API do agente para obter resposta real
+            const response = await fetch('/api/agents/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    provider: aiProvider,
+                    model: aiModel,
+                    systemPrompt: systemPrompt,
+                    testMessage: userText,
+                    fallbackPrompt: 'Desculpe, houve um erro ao processar sua solicitação. Por favor, tente novamente.'
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao obter resposta do agente');
+            }
+
+            const result = await response.json();
+
             const agentMessage: ChatMessage = {
                 id: (Date.now() + 1).toString(),
                 sender: 'agent',
-                message: `Recebi sua mensagem: "${userText}". Estou processando sua solicitação usando o ${agentType}.\n\n*[Código: ${internalCode}]*`,
+                message: result.response || result.error || 'Não consegui processar sua solicitação.',
                 timestamp: new Date()
             };
+
             setMessages(prev => [...prev, agentMessage]);
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Erro ao comunicar com o agente';
+            setError(errorMessage);
+
+            const agentMessage: ChatMessage = {
+                id: (Date.now() + 1).toString(),
+                sender: 'agent',
+                message: `Desculpe, ocorreu um erro: ${errorMessage}`,
+                timestamp: new Date()
+            };
+
+            setMessages(prev => [...prev, agentMessage]);
+        } finally {
             setIsTyping(false);
-        }, 1500);
+        }
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {

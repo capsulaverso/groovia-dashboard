@@ -110,7 +110,7 @@ const RightAside: React.FC<RightAsideProps> = ({ activeView, onNavigate }) => {
             }`}
         >
             <span className="material-icons-outlined text-lg">{icon}</span>
-            <span className="font-normal text-xs flex-1">{label}</span>
+            <span className="font-normal text-base flex-1">{label}</span>
             {badge && (
                 <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-semibold">
                     {badge}
@@ -140,22 +140,6 @@ const RightAside: React.FC<RightAsideProps> = ({ activeView, onNavigate }) => {
     return (
         <aside className="w-80 p-6 hidden xl:block">
             <div className="w-full h-full flex flex-col gap-6 sticky top-6 overflow-y-auto max-h-[calc(100vh-3rem)]">
-                <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-on-surface-light dark:text-on-surface-dark">
-                        Tarefas Pendentes
-                    </h3>
-                    <button
-                        onClick={() => setIsCollapsed(true)}
-                        className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                        title="Recolher painel lateral"
-                    >
-                        <span className="material-icons-outlined text-gray-600 dark:text-gray-400 text-xl">
-                            chevron_right
-                        </span>
-                    </button>
-                </div>
-
-                {/* Tarefas Pendentes */}
                 {progressLoading ? (
                     <div className="flex items-center justify-center py-8">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -228,12 +212,6 @@ const RightAside: React.FC<RightAsideProps> = ({ activeView, onNavigate }) => {
                                 label="Meus Documentos"
                                 isActive={activeView === 'documents'}
                                 onClick={() => onNavigate('documents')}
-                            />
-                            <MenuItem
-                                icon="smart_toy"
-                                label="Meus Agentes"
-                                isActive={activeView === 'my-agents'}
-                                onClick={() => onNavigate('my-agents')}
                             />
                             <MenuItem
                                 icon="person"

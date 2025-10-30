@@ -1,35 +1,37 @@
-import { Pool as NeonPool, neonConfig } from '@neondatabase/serverless';
-import { drizzle as drizzleNeon } from 'drizzle-orm/neon-serverless';
-import { Pool as PgPool } from 'pg';
-import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
-import ws from 'ws';
+import 'dotenv/config';
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from '../shared/schema.js';
 
-neonConfig.webSocketConstructor = ws;
-
-const databaseUrl = process.env.DATABASE_URL || 
-  'postgresql://authenticator:npg_M6Wqf5cFoSRe@ep-bold-poetry-a4sbv5mh-pooler.us-east-1.aws.neon.tech/capsula?sslmode=require';
+// Verifica se a variável está configurada
+const databaseUrl = process.env.DATABASE_URL;
+console.log('🔍 DATABASE_URL no db.ts:', databaseUrl ? `${databaseUrl.substring(0, 20)}...` : '❌ NÃO DEFINIDA');
 
 if (!databaseUrl) {
-  throw new Error(
-    'DATABASE_URL must be set. Did you forget to provision a database?',
-  );
+  console.error('❌ DATABASE_URL não definida no .env');
+  throw new Error('❌ DATABASE_URL não definida. Configure no arquivo .env.');
 }
 
-// Se for Supabase, usar pg em vez de neon
 let pool;
 let db;
 
-if (databaseUrl.includes('supabase.co')) {
-  // Usar pg para Supabase
-  pool = new PgPool({ connectionString: databaseUrl });
-  db = drizzlePg(pool, { schema });
-  console.log('✅ Usando driver PostgreSQL para Supabase');
-} else {
-  // Usar neon para Neon
-  pool = new NeonPool({ connectionString: databaseUrl });
-  db = drizzleNeon(pool, { schema });
-  console.log('✅ Usando driver Neon serverless');
+try {
+  pool = new Pool({ connectionString: databaseUrl });
+  db = drizzle(pool, { schema });
+  console.log('✅ Conectado ao PostgreSQL com Drizzle ORM');
+  
+  // Testar conexão
+  pool.query('SELECT NOW()', (err, res) => {
+    if (err) {
+      console.error('❌ Erro ao testar conexão:', err.message);
+    } else {
+      console.log('✅ Teste de conexão bem-sucedido');
+    }
+  });
+} catch (error: any) {
+  console.error('❌ Erro ao inicializar o banco de dados:', error.message);
+  console.error('❌ Stack:', error.stack);
+  throw error;
 }
 
 export { pool, db };

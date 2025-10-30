@@ -135,9 +135,7 @@ const FloatingTooltip: React.FC<FloatingTooltipProps> = ({
                         onClick={onClose}
                         className="absolute top-2 right-2 p-1 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-on-surface-secondary-light dark:text-on-surface-secondary-dark transition-colors z-10"
                         aria-label="Fechar"
-                    >
-                        <span className="material-icons-outlined text-base">close</span>
-                    </button>
+                    />
                 )}
 
                 {icon && (

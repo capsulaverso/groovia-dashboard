@@ -9,6 +9,8 @@ export interface User {
     role: UserRole;
     avatar?: string;
     createdAt: string;
+    clientId?: number;
+    sessionToken?: string;
 }
 
 interface UseUserReturn {
@@ -29,6 +31,8 @@ const DEFAULT_USER: User = {
     role: 'admin',
     avatar: 'https://i.pravatar.cc/150?img=12',
     createdAt: new Date().toISOString(),
+    clientId: 1,
+    sessionToken: 'default-session',
 };
 
 export const useUser = (): UseUserReturn => {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApi, apiClient } from '../../hooks/useApi';
+import ChatModal from '../ChatModal';
 
 interface Integration {
   id: string;
@@ -47,6 +48,7 @@ const AgentsControlPage: React.FC = () => {
   const [testingAgent, setTestingAgent] = useState<number | null>(null);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [testMessage, setTestMessage] = useState('Olá! Por favor, me explique brevemente o que você faz.');
+  const [chatOpenAgent, setChatOpenAgent] = useState<Agent | null>(null);
 
   const handleEdit = (agent: Agent) => {
     setEditingAgent({ ...agent });
@@ -225,6 +227,14 @@ const AgentsControlPage: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setChatOpenAgent(agent)}
+                  className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors flex items-center gap-2"
+                  title="Abrir Chat"
+                >
+                  <span className="material-icons-outlined text-lg">chat</span>
+                  Chat
+                </button>
                 <button
                   onClick={() => handleTest(agent)}
                   disabled={testingAgent === agent.id}
@@ -590,6 +600,21 @@ const AgentsControlPage: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {chatOpenAgent && (
+        <ChatModal
+          isOpen={!!chatOpenAgent}
+          onClose={() => setChatOpenAgent(null)}
+          agentTitle={chatOpenAgent.title}
+          agentDescription={chatOpenAgent.description}
+          agentType={chatOpenAgent.agentType}
+          internalCode={chatOpenAgent.internalCode}
+          agentId={chatOpenAgent.id}
+          aiProvider={chatOpenAgent.aiProvider}
+          aiModel={chatOpenAgent.aiModel}
+          systemPrompt={chatOpenAgent.systemPrompt}
+        />
       )}
     </div>
   );

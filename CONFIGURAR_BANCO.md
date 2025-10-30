@@ -1,23 +1,25 @@
 # 🗄️ Configuração Rápida do Banco de Dados
 
-## Opção 1: Neon Database (Recomendado - 2 minutos)
+## Opção 1: Supabase (Recomendado - 2 minutos)
 
-### Passo 1: Criar banco no Neon
-1. Acesse: **https://console.neon.tech**
-2. Clique em "Sign Up" e crie uma conta gratuita
-3. Clique em "Create a project"
+### Passo 1: Criar banco no Supabase
+1. Acesse: **https://supabase.com**
+2. Clique em "Start your project" e crie uma conta gratuita
+3. Crie um novo projeto
 4. Nome do projeto: `groovia`
-5. Clique em "Create project"
+5. Escolha uma senha forte para o banco de dados
+6. Clique em "Create new project"
 
-### Passo 2: Copiar URL
-1. Na página do projeto, clique no botão **"Connection Details"**
-2. Na seção **"Connection string"**, copie o texto que começa com `postgresql://...`
+### Passo 2: Copiar Connection String
+1. Na página do projeto, vá em **Settings** → **Database**
+2. Role até **Connection string** → **URI**
+3. Copie a URL que começa com `postgresql://postgres...`
 
 ### Passo 3: Configurar .env
 ```bash
 # Abra o arquivo .env no editor
 # Cole a URL copiada
-DATABASE_URL=postgresql://seu_usuario:sua_senha@seu_host/groovia...
+DATABASE_URL=postgresql://postgres:[SUA_SENHA]@db.[PROJETO].supabase.co:5432/postgres
 ```
 
 ### Passo 4: Executar
@@ -94,9 +96,9 @@ npm run dev
 
 ## ⚡ Solução Mais Rápida
 
-**Use Neon Database** - é de graça e leva 2 minutos:
-1. https://console.neon.tech → Criar projeto
-2. Copiar DATABASE_URL
+**Use Supabase** - é de graça e leva 2 minutos:
+1. https://supabase.com → Criar projeto
+2. Copiar Connection String do Settings → Database
 3. Colar no .env
 4. `npm run db:push && npm run db:seed`
 

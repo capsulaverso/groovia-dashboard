@@ -1,4 +1,3 @@
-
 export interface ScanCardData {
     id: number;
     title: string;
@@ -112,6 +111,10 @@ export interface ChatModalProps {
     agentDescription: string;
     agentType: string;
     internalCode: string;
+    agentId?: number;
+    aiProvider?: string;
+    aiModel?: string;
+    systemPrompt?: string;
 }
 
 // Novas interfaces para AgentWorkspace (página dedicada)

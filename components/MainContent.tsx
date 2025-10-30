@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { SCAN_CARDS_DATA, ANALYSIS_CARDS_DATA, AGENT_CARDS_DATA } from '../constants';
 import ScanCard from './ScanCard';
@@ -8,6 +7,7 @@ import AgentCard, { AgentCardConfig } from './AgentCard';
 import AgentWorkspace from './AgentWorkspace';
 import AdminDashboard from './AdminDashboard';
 import UserMenu from './UserMenu';
+import ProfileCompletionModal from './ProfileCompletionModal';
 import { generateWorkspaceConfig } from '../utils/agentWorkspaceConfig';
 import { populateExampleConversations } from '../utils/populateConversations';
 import { useUserProgress } from '../hooks/useUserProgress';
@@ -141,6 +141,7 @@ const MainContent: React.FC<MainContentProps> = ({ onNavigate }) => {
     const continueRef = useRef<HTMLDivElement>(null);
     const carouselRef = useRef<HTMLDivElement>(null);
     const [currentDateTime, setCurrentDateTime] = useState<string>('');
+    const [showProfileModal, setShowProfileModal] = useState(false);
     
     const { progress, isLoading } = useUserProgress();
     const { user } = useUser();
@@ -347,10 +348,10 @@ const MainContent: React.FC<MainContentProps> = ({ onNavigate }) => {
 
     // 4 Gatilhos Inteligentes
     const smartShortcuts = [
-        { icon: 'description', label: 'Inserir Documentos', color: 'bg-blue-500', action: 'documents' },
-        { icon: 'person', label: 'Completar Perfil', color: 'bg-green-500', action: 'profile' },
-        { icon: 'lock', label: 'Acessar Cofre Pessoal', color: 'bg-purple-500', action: 'profile' }, // Irá para a aba Cofre no perfil
-        { icon: 'assessment', label: 'Ver Diagnóstico', color: 'bg-orange-500', action: 'my-agents' }
+        { icon: 'description', label: 'Inserir Documentos', color: 'bg-blue-500', action: 'documents', id: 'documents' },
+        { icon: 'person', label: 'Completar Perfil', color: 'bg-green-500', action: 'profile', id: 'complete-profile' },
+        { icon: 'lock', label: 'Acessar Cofre Pessoal', color: 'bg-purple-500', action: 'profile', id: 'vault' },
+        { icon: 'assessment', label: 'Ver Diagnóstico', color: 'bg-orange-500', action: 'my-agents', id: 'diagnosis' }
     ];
 
     // Groovia Flow - Dados dos Agentes
@@ -382,9 +383,9 @@ const MainContent: React.FC<MainContentProps> = ({ onNavigate }) => {
                         <div className="text-sm font-medium text-on-surface-light dark:text-on-surface-dark">
                             Seja bem vindo de volta
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-on-surface-secondary-light dark:text-on-surface-secondary-dark bg-gradient-to-r from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 px-4 py-2 rounded-full border border-primary/20">
+                        <div className="flex items-center gap-2 text-xs text-on-surface-secondary-light dark:text-on-surface-secondary-dark px-4 py-2 rounded-full border border-primary/20">
                             <span className="material-icons-outlined text-sm">access_time</span>
-                            <span>{currentDateTime || 'Carregando...'}</span>
+                            <span style={{ fontWeight: 400 }}>{currentDateTime || 'Carregando...'}</span>
                         </div>
                     </div>
                 </div>
@@ -395,24 +396,26 @@ const MainContent: React.FC<MainContentProps> = ({ onNavigate }) => {
                         <button
                             key={index}
                             onClick={() => {
-                                if (onNavigate && shortcut.action) {
+                                if (shortcut.id === 'complete-profile') {
+                                    setShowProfileModal(true);
+                                } else if (onNavigate && shortcut.action) {
                                     onNavigate(shortcut.action);
                                 }
                             }}
-                            className="relative overflow-hidden bg-black dark:bg-neutral-900 rounded-2xl border border-neutral-800 dark:border-neutral-700 p-6 hover:border-[#38ff81] hover:shadow-[0_0_30px_rgba(56,255,129,0.3)] hover:scale-[1.02] transition-all duration-300 group font-['Poppins'] cursor-pointer"
-                            style={{ fontWeight: 300 }}
+                            className="relative overflow-hidden rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300 group font-['Poppins'] cursor-pointer"
+                            style={{ fontWeight: 300, backgroundColor: '#38ff81', border: '1px solid rgba(38, 38, 38, 0)' }}
                         >
                             {/* Efeito de brilho no hover */}
                             <div className="absolute inset-0 bg-gradient-to-br from-[#38ff81]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             
                             <div className="flex flex-col items-start gap-4 relative z-10">
-                                <div className="relative w-14 h-14 bg-gradient-to-br from-[#38ff81]/20 to-[#38ff81]/10 rounded-xl flex items-center justify-center group-hover:from-[#38ff81]/30 group-hover:to-[#38ff81]/20 transition-all duration-300 border border-[#38ff81]/20 group-hover:border-[#38ff81]/40">
-                                    <span className="material-icons-outlined text-[#38ff81] text-3xl group-hover:scale-110 transition-transform duration-300 drop-shadow-[0_0_8px_rgba(56,255,129,0.6)]">
+                                <div className="relative w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300" style={{ border: '1px solid rgba(144, 19, 254, 1)' }}>
+                                    <span className="material-icons-outlined text-3xl group-hover:scale-110 transition-transform duration-300" style={{ color: 'rgba(144, 19, 254, 1)' }}>
                                         {shortcut.icon}
                                     </span>
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-[14px] text-white dark:text-neutral-100 leading-tight text-left font-light">
+                                    <p className="text-[14px] leading-tight text-left" style={{ color: 'rgba(144, 19, 254, 1)', fontWeight: 400, fontSize: '14px' }}>
                                         {shortcut.label}
                                     </p>
                                 </div>
@@ -431,7 +434,8 @@ const MainContent: React.FC<MainContentProps> = ({ onNavigate }) => {
                 <div className="bg-gradient-to-br from-surface-light to-surface-light/50 dark:from-surface-dark dark:to-surface-dark/50 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
                     <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30">
                         <h3 className="text-base font-semibold text-on-surface-light dark:text-on-surface-dark">
-                            Seus Agentes
+                            Seus Agentes | {' '}
+                            <span style={{ fontWeight: 800, letterSpacing: 0 }}>Groov.ia</span>
                         </h3>
                         <span className="text-xs font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full">
                             Outros 12 +
@@ -449,7 +453,7 @@ const MainContent: React.FC<MainContentProps> = ({ onNavigate }) => {
                                 className="flex items-start gap-4 px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors cursor-pointer group"
                             >
                                 <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 group-hover:scale-150 transition-transform flex-shrink-0"></div>
-                                <span className="text-sm leading-tight text-on-surface-secondary-light dark:text-on-surface-secondary-dark group-hover:text-on-surface-light dark:group-hover:text-on-surface-dark transition-colors flex-1">
+                                <span className="leading-tight text-on-surface-secondary-light dark:text-on-surface-secondary-dark group-hover:text-on-surface-light dark:group-hover:text-on-surface-dark transition-colors flex-1" style={{ fontSize: '16px', lineHeight: '19.5px' }}>
                                     {item.text}
                                 </span>
                                 <span className="material-icons-outlined text-xs text-on-surface-secondary-light dark:text-on-surface-secondary-dark opacity-0 group-hover:opacity-100 transition-opacity">
@@ -848,6 +852,19 @@ const MainContent: React.FC<MainContentProps> = ({ onNavigate }) => {
                     </div>
                 </section>
             )}
+
+            {/* Modal de Conclusão de Cadastro */}
+            <ProfileCompletionModal
+                isOpen={showProfileModal}
+                onClose={() => setShowProfileModal(false)}
+                onComplete={() => {
+                    setShowProfileModal(false);
+                    // Recarregar dados do usuário ou mostrar mensagem de sucesso
+                    alert('Perfil atualizado com sucesso!');
+                }}
+                userId={user?.id || 1}
+                clientId={clientId}
+            />
         </main>
     );
 };

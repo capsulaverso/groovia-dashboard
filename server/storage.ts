@@ -11,7 +11,7 @@ import {
   type AgentConversation, type InsertAgentConversation,
   type AgentMessage, type InsertAgentMessage
 } from '../shared/schema.js';
-import { db } from './db.js';
+import { pool, db } from './db.js';
 import { eq, desc, and, inArray } from 'drizzle-orm';
 
 // Interface de armazenamento
@@ -161,26 +161,27 @@ export class DatabaseStorage implements IStorage {
 
   // Agents
   async getAgents(clientId: number): Promise<Agent[]> {
-    return await db
-      .select()
-      .from(agents)
-      .where(eq(agents.clientId, clientId));
+    const result = await pool.query(
+      'SELECT * FROM agents WHERE client_id = $1 ORDER BY id',
+      [clientId]
+    );
+    return result.rows as Agent[];
   }
 
   async getAgent(id: number, clientId: number): Promise<Agent | undefined> {
-    const [agent] = await db
-      .select()
-      .from(agents)
-      .where(and(eq(agents.id, id), eq(agents.clientId, clientId)));
-    return agent || undefined;
+    const result = await pool.query(
+      'SELECT * FROM agents WHERE id = $1 AND client_id = $2',
+      [id, clientId]
+    );
+    return result.rows[0] as Agent | undefined;
   }
 
   async getAgentByCode(code: string, clientId: number): Promise<Agent | undefined> {
-    const [agent] = await db
-      .select()
-      .from(agents)
-      .where(and(eq(agents.internalCode, code), eq(agents.clientId, clientId)));
-    return agent || undefined;
+    const result = await pool.query(
+      'SELECT * FROM agents WHERE internal_code = $1 AND client_id = $2',
+      [code, clientId]
+    );
+    return result.rows[0] as Agent | undefined;
   }
 
   async createAgent(insertAgent: InsertAgent): Promise<Agent> {
@@ -395,15 +396,30 @@ export class DatabaseStorage implements IStorage {
 
   // User Progress
   async getUserProgress(userId: number, clientId: number): Promise<UserProgress[]> {
-    const user = await this.getUser(userId);
-    if (!user || user.clientId !== clientId) {
-      throw new Error('User does not belong to the specified client');
+    try {
+      const user = await this.getUser(userId);
+      if (!user) {
+        // User doesn't exist yet, return empty array
+        console.log(`📊 User ${userId} not found, returning empty progress`);
+        return [];
+      }
+
+      if (user.clientId !== clientId) {
+        throw new Error('User does not belong to the specified client');
+      }
+
+      return await db
+        .select()
+        .from(userProgress)
+        .where(eq(userProgress.userId, userId));
+    } catch (error) {
+      // If user doesn't exist, return empty array instead of throwing
+      if (error instanceof Error && error.message.includes('not found')) {
+        console.log(`📊 User ${userId} not found, returning empty progress`);
+        return [];
+      }
+      throw error;
     }
-    
-    return await db
-      .select()
-      .from(userProgress)
-      .where(eq(userProgress.userId, userId));
   }
 
   async getUserAgentProgress(userId: number, agentId: number, clientId: number): Promise<UserProgress | undefined> {

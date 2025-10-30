@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, timestamp, boolean, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, integer, timestamp, boolean, jsonb, unique } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Tabela de Clientes (Multi-tenancy)
@@ -28,7 +28,7 @@ export const users = pgTable('users', {
 // Tabela de Agentes
 export const agents = pgTable('agents', {
   id: serial('id').primaryKey(),
-  clientId: integer('client_id').references(() => clients.id, { onDelete: 'cascade' }),
+  clientId: integer('client_id').references(() => clients.id, { onDelete: 'cascade' }).notNull(),
   internalCode: text('internal_code').notNull().unique(),
   title: text('title').notNull(),
   description: text('description').notNull(),
@@ -139,6 +139,27 @@ export const agentMessages = pgTable('agent_messages', {
   timestamp: timestamp('timestamp').defaultNow().notNull(),
 });
 
+// Tabela de Sessões de Chat
+export const chatSessions = pgTable('chat_sessions', {
+  id: serial('id').primaryKey(),
+  sessionHash: text('session_hash').notNull(),
+  clientId: integer('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  agentId: integer('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
+  conversationId: integer('conversation_id').references(() => conversations.id, { onDelete: 'set null' }),
+  startedAt: timestamp('started_at').defaultNow().notNull(),
+  lastActivityAt: timestamp('last_activity_at').defaultNow().notNull(),
+  messagesCount: integer('messages_count').notNull().default(0),
+  totalTokensUsed: integer('total_tokens_used').notNull().default(0),
+  totalCostUsd: text('total_cost_usd').notNull().default('0.00'),
+  avgLatencyMs: integer('avg_latency_ms'),
+  status: text('status').notNull().default('active'),
+  metadata: jsonb('metadata').default('{}'),
+}, (table) => ({
+  sessionHashUnique: unique().on(table.sessionHash),
+  userAgentUnique: unique().on(table.userId, table.agentId),
+}));
+
 // Relações
 export const clientsRelations = relations(clients, ({ many }) => ({
   users: many(users),
@@ -147,6 +168,7 @@ export const clientsRelations = relations(clients, ({ many }) => ({
   conversations: many(conversations),
   integrations: many(integrations),
   agentConversations: many(agentConversations),
+  chatSessions: many(chatSessions),
 }));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -157,6 +179,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   documents: many(documents),
   conversations: many(conversations),
   progress: many(userProgress),
+  chatSessions: many(chatSessions),
 }));
 
 export const agentsRelations = relations(agents, ({ one, many }) => ({
@@ -169,6 +192,7 @@ export const agentsRelations = relations(agents, ({ one, many }) => ({
   integrations: many(integrations),
   initiatedConversations: many(agentConversations),
   sentMessages: many(agentMessages),
+  chatSessions: many(chatSessions),
 }));
 
 export const documentsRelations = relations(documents, ({ one }) => ({
@@ -196,6 +220,7 @@ export const conversationsRelations = relations(conversations, ({ one, many }) =
     references: [agents.id],
   }),
   messages: many(messages),
+  chatSessions: many(chatSessions),
 }));
 
 export const messagesRelations = relations(messages, ({ one }) => ({
@@ -254,6 +279,25 @@ export const agentMessagesRelations = relations(agentMessages, ({ one }) => ({
   }),
 }));
 
+export const chatSessionsRelations = relations(chatSessions, ({ one }) => ({
+  client: one(clients, {
+    fields: [chatSessions.clientId],
+    references: [clients.id],
+  }),
+  user: one(users, {
+    fields: [chatSessions.userId],
+    references: [users.id],
+  }),
+  agent: one(agents, {
+    fields: [chatSessions.agentId],
+    references: [agents.id],
+  }),
+  conversation: one(conversations, {
+    fields: [chatSessions.conversationId],
+    references: [conversations.id],
+  }),
+}));
+
 // Tipos TypeScript
 export type Client = typeof clients.$inferSelect;
 export type InsertClient = typeof clients.$inferInsert;
@@ -284,3 +328,6 @@ export type InsertAgentConversation = typeof agentConversations.$inferInsert;
 
 export type AgentMessage = typeof agentMessages.$inferSelect;
 export type InsertAgentMessage = typeof agentMessages.$inferInsert;
+
+export type ChatSession = typeof chatSessions.$inferSelect;
+export type InsertChatSession = typeof chatSessions.$inferInsert;

@@ -28,12 +28,13 @@ O sistema **Groovia Dashboard** é uma plataforma multi-tenant completa com:
 
 O sistema precisa de uma URL de conexão PostgreSQL válida. Você tem **duas opções**:
 
-#### **Opção A: Neon Database (Recomendado - Gratuito)**
-1. Acesse: https://console.neon.tech
+#### **Opção A: Supabase (Recomendado - Gratuito)**
+1. Acesse: https://supabase.com
 2. Crie uma conta gratuita
 3. Crie um novo projeto
-4. Copie a `DATABASE_URL` (formato: `postgresql://user:pass@host:5432/dbname`)
-5. Edite o arquivo `.env` e substitua a `DATABASE_URL`
+4. Vá em Settings → Database → Connection string → URI
+5. Copie a `DATABASE_URL` (formato: `postgresql://postgres:pass@db.projeto.supabase.co:5432/postgres`)
+6. Edite o arquivo `.env` e substitua a `DATABASE_URL`
 
 #### **Opção B: PostgreSQL Local**
 Se você tem PostgreSQL instalado localmente, edite o arquivo `.env`:

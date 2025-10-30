@@ -6,7 +6,7 @@
 
 - ✅ **Backend**: http://localhost:3001  
 - ✅ **Frontend**: http://localhost:5000  
-- ✅ **Banco de Dados**: Neon Database conectado
+- ✅ **Banco de Dados**: Supabase PostgreSQL conectado
 - ✅ **Tabelas**: Criadas no banco
 - ✅ **Dependências**: Todas instaladas
 
@@ -15,9 +15,8 @@
 ## 📋 O Que Foi Configurado
 
 ### 1. **Banco de Dados**
-- **Provider**: Neon Database
-- **URL**: `postgresql://authenticator@ep-bold-poetry-a4sbv5mh-pooler...`
-- **Database**: capsula
+- **Provider**: Supabase
+- **URL**: Configurada no arquivo `.env`
 - **Tabelas criadas**: clients, users, agents, documents, conversations, messages, user_progress, integrations, agent_conversations, agent_messages
 
 ### 2. **Variáveis de Ambiente**
@@ -36,7 +35,7 @@
 
 ### 1. Inserir Usuário Inicial
 
-Acesse o [Neon Console](https://console.neon.tech) e execute no SQL Editor:
+Acesse o [Supabase SQL Editor](https://supabase.com) e execute no SQL Editor:
 
 ```sql
 -- Inserir cliente

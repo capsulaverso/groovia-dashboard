@@ -1,11 +1,9 @@
 import { defineConfig } from 'drizzle-kit';
 
-let databaseUrl = process.env.DATABASE_URL || 
-  'postgresql://authenticator:npg_M6Wqf5cFoSRe@ep-bold-poetry-a4sbv5mh-pooler.us-east-1.aws.neon.tech/capsula?sslmode=require';
+const databaseUrl = process.env.DATABASE_URL;
 
-// Se for Supabase, usar pooler
-if (databaseUrl.includes('supabase.co')) {
-  databaseUrl = databaseUrl.replace('/v2', '/pooler.v1');
+if (!databaseUrl) {
+  throw new Error('DATABASE_URL não está definida no .env');
 }
 
 export default defineConfig({
