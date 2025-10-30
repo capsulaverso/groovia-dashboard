@@ -120,9 +120,9 @@ const RightAside: React.FC<RightAsideProps> = ({ activeView, onNavigate }) => {
     );
 
     const MenuSection: React.FC<{ title: string; children: React.ReactNode; badge?: string }> = ({ title, children, badge }) => (
-        <div className="mb-6">
-            <div className="flex items-center gap-2 px-4 mb-3">
-                <h3 className="text-xs font-semibold text-on-surface-secondary-light dark:text-on-surface-secondary-dark uppercase tracking-wider">
+        <div className="mb-4">
+            <div className="flex items-center gap-2 px-4 mb-2">
+                <h3 className="text-xs font-bold text-[#38ff81] dark:text-[#38ff81] uppercase tracking-wider">
                 {title}
             </h3>
                 {badge && (
@@ -180,19 +180,47 @@ const RightAside: React.FC<RightAsideProps> = ({ activeView, onNavigate }) => {
                             })}
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center py-8 text-center bg-surface-light dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-gray-700">
-                        <span className="material-icons-outlined text-gray-400 dark:text-gray-600 text-4xl mb-2">
-                            task_alt
-                        </span>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            Nenhuma tarefa pendente
-                        </p>
+                    <div className="flex flex-col items-center justify-center py-6 bg-black dark:bg-neutral-900 rounded-xl border border-neutral-800 dark:border-neutral-700">
+                        {/* Avatar Profissional */}
+                        <div className="relative mb-4">
+                            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#38ff81] to-[#38ff81]/50 flex items-center justify-center border-2 border-[#38ff81] shadow-lg shadow-[#38ff81]/30">
+                                {user?.avatar ? (
+                                    <img 
+                                        src={user.avatar} 
+                                        alt={user.name || 'User'} 
+                                        className="w-full h-full rounded-full object-cover"
+                                    />
+                                ) : (
+                                    <span className="material-icons-outlined text-white text-4xl">
+                                        person
+                                    </span>
+                                )}
+                            </div>
+                            {/* Badge de status online */}
+                            <div className="absolute bottom-0 right-0 w-5 h-5 bg-[#38ff81] rounded-full border-2 border-black dark:border-neutral-900 shadow-lg">
+                                <div className="w-full h-full bg-[#38ff81] rounded-full animate-pulse"></div>
+                            </div>
+                        </div>
+                        
+                        {/* Informações do usuário */}
+                        <div className="text-center">
+                            <h4 className="text-white dark:text-neutral-100 font-semibold text-sm mb-1">
+                                {user?.name || 'Usuário'}
+                            </h4>
+                            <p className="text-[#38ff81] dark:text-[#38ff81] text-xs font-medium mb-2">
+                                {user?.email || 'user@groovia.com'}
+                            </p>
+                            <div className="inline-flex items-center gap-1 text-xs text-neutral-400">
+                                <div className="w-2 h-2 bg-[#38ff81] rounded-full animate-pulse"></div>
+                                <span>Online</span>
+                            </div>
+                        </div>
                     </div>
                 )}
 
                 {/* Menu: Ferramentas, Administração, Sistema */}
-                <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <nav className="space-y-6">
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <nav className="space-y-4">
                         {/* Ferramentas */}
                         <MenuSection title="Ferramentas">
                             <MenuItem

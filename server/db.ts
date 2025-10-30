@@ -1,11 +1,12 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
+import { Pool as NeonPool, neonConfig } from '@neondatabase/serverless';
+import { drizzle as drizzleNeon } from 'drizzle-orm/neon-serverless';
+import { Pool as PgPool } from 'pg';
+import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
 import ws from 'ws';
 import * as schema from '../shared/schema.js';
 
 neonConfig.webSocketConstructor = ws;
 
-// Usar DATABASE_URL do .env ou variável de ambiente
 const databaseUrl = process.env.DATABASE_URL || 
   'postgresql://authenticator:npg_M6Wqf5cFoSRe@ep-bold-poetry-a4sbv5mh-pooler.us-east-1.aws.neon.tech/capsula?sslmode=require';
 
@@ -15,5 +16,20 @@ if (!databaseUrl) {
   );
 }
 
-export const pool = new Pool({ connectionString: databaseUrl });
-export const db = drizzle({ client: pool, schema });
+// Se for Supabase, usar pg em vez de neon
+let pool;
+let db;
+
+if (databaseUrl.includes('supabase.co')) {
+  // Usar pg para Supabase
+  pool = new PgPool({ connectionString: databaseUrl });
+  db = drizzlePg(pool, { schema });
+  console.log('✅ Usando driver PostgreSQL para Supabase');
+} else {
+  // Usar neon para Neon
+  pool = new NeonPool({ connectionString: databaseUrl });
+  db = drizzleNeon(pool, { schema });
+  console.log('✅ Usando driver Neon serverless');
+}
+
+export { pool, db };

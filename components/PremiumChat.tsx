@@ -310,27 +310,27 @@ const PremiumChat: React.FC<PremiumChatProps> = ({
     ];
 
     return (
-        <div className="fixed inset-0 z-50 flex animate-fade-in bg-background-light dark:bg-background-dark">
+        <div className="fixed inset-0 z-50 flex animate-fade-in bg-black dark:bg-neutral-900">
             <div className="flex h-full w-full">
                 <aside
-                    className="border-r border-gray-300 dark:border-gray-700 bg-surface-light dark:bg-surface-dark transition-all duration-300"
+                    className="border-r border-neutral-800 bg-black dark:bg-neutral-900 transition-all duration-300"
                     style={{
                         width: sidebarCollapsed ? '72px' : '280px'
                     }}
                 >
                     <div className="flex h-full flex-col">
-                        <header className="border-b border-gray-300 dark:border-gray-700 px-6 py-5">
+                        <header className="border-b border-neutral-800 px-6 py-5">
                             <div className="flex items-center justify-between">
                                 {!sidebarCollapsed && (
                                     <div>
-                                        <h2 className="text-sm font-semibold text-on-surface-light dark:text-on-surface-dark">Tools</h2>
-                                        <p className="text-xs text-on-surface-secondary-light dark:text-on-surface-secondary-dark">Workspace utilities</p>
+                                        <h2 className="text-sm font-semibold text-[#38ff81]">Tools</h2>
+                                        <p className="text-xs text-neutral-400">Workspace utilities</p>
                                     </div>
                                 )}
                                 <button
                                     type="button"
                                     onClick={() => setSidebarCollapsed((prev) => !prev)}
-                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-white/5"
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[#38ff81] transition hover:bg-[#38ff81]/10"
                                 >
                                     <span className="material-icons-outlined text-lg">
                                         {sidebarCollapsed ? 'chevron_right' : 'chevron_left'}
@@ -411,12 +411,12 @@ const PremiumChat: React.FC<PremiumChatProps> = ({
                     </div>
                 </aside>
 
-                <main className="flex flex-1 flex-col bg-background-light dark:bg-background-dark">
-                    <div className="border-b border-gray-300 dark:border-gray-700 px-8 py-4">
+                <main className="flex flex-1 flex-col bg-black dark:bg-neutral-900">
+                    <div className="border-b border-neutral-800 px-8 py-4">
                         <div className="mx-auto flex max-w-3xl items-center justify-between">
                             <div>
-                                <h1 className="text-lg font-medium text-on-surface-light dark:text-on-surface-dark">{agentTitle}</h1>
-                                <p className="text-xs text-on-surface-secondary-light dark:text-on-surface-secondary-dark">{agentType}</p>
+                                <h1 className="text-lg font-semibold text-white">{agentTitle}</h1>
+                                <p className="text-xs text-[#38ff81]">{agentType}</p>
                             </div>
                             <div className="flex flex-col items-end gap-2">
                                 <span className="text-xs font-mono text-gray-600">{internalCode}</span>

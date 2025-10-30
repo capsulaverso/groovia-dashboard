@@ -64,16 +64,16 @@ const MenuSection: React.FC<MenuSectionProps> = ({ title, children, isCollapsibl
     const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
     return (
-        <div className="mb-6">
+        <div className="mb-4">
             <div 
-                className={`flex items-center justify-between px-4 mb-3 ${isCollapsible ? 'cursor-pointer hover:opacity-80' : ''}`}
+                className={`flex items-center justify-between px-4 mb-2 ${isCollapsible ? 'cursor-pointer hover:opacity-80' : ''}`}
                 onClick={() => isCollapsible && setIsCollapsed(!isCollapsed)}
             >
-                <h3 className="text-xs font-semibold text-on-surface-secondary-light dark:text-on-surface-secondary-dark uppercase tracking-wider">
+                <h3 className="text-xs font-bold text-[#38ff81] dark:text-[#38ff81] uppercase tracking-wider">
                     {title}
                 </h3>
                 {isCollapsible && (
-                    <span className="material-icons-outlined text-sm text-on-surface-secondary-light dark:text-on-surface-secondary-dark transition-transform" style={{ transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>
+                    <span className="material-icons-outlined text-sm text-[#38ff81] dark:text-[#38ff81] transition-transform" style={{ transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>
                         expand_more
                     </span>
                 )}
@@ -103,7 +103,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
                     <ThemeSelector />
                 </div>
 
-                <nav className="flex-1 overflow-y-auto">
+                <nav className="flex-1 overflow-y-auto space-y-4">
                     {/* MENU PRINCIPAL - NOVOS ITENS */}
                     <MenuSection title="Navegação">
                         <MenuItem

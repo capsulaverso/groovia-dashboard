@@ -30,7 +30,7 @@ const App: React.FC = () => {
     const renderContent = () => {
         switch (currentView) {
             case 'home':
-                return <MainContent />;
+                return <MainContent onNavigate={setCurrentView} />;
             case 'documents':
                 return <DocumentsPage />;
             case 'my-agents':

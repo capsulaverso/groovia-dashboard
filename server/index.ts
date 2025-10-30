@@ -138,7 +138,7 @@ app.get('/api/agents', async (req, res) => {
       const agents = await storage.getAgents(clientId);
       console.log('✅ Agentes encontrados:', agents?.length || 0);
       
-      // Mapear para formato esperado pelo frontend
+      // Retornar todos os campos necessários do agente
       const formattedAgents = (agents || []).map(agent => ({
         id: agent.id,
         title: agent.title,
@@ -147,7 +147,20 @@ app.get('/api/agents', async (req, res) => {
         isActive: agent.isActive,
         internalCode: agent.internalCode,
         behaviorType: agent.behaviorType,
-        capabilities: agent.capabilities
+        capabilities: agent.capabilities,
+        integrations: agent.integrations || [],
+        aiModel: agent.aiModel,
+        aiProvider: agent.aiProvider,
+        systemPrompt: agent.systemPrompt,
+        fallbackPrompt: agent.fallbackPrompt,
+        webhookUrl: agent.webhookUrl,
+        webhookEnabled: agent.webhookEnabled,
+        canCommunicateWithAgents: agent.canCommunicateWithAgents,
+        allowedAgentIds: agent.allowedAgentIds || [],
+        createdAt: agent.createdAt,
+        updatedAt: agent.updatedAt,
+        // Campo 'act' pode estar em capabilities ou metadata
+        act: (agent.capabilities as any)?.act || null
       }));
       
       span.setAttribute('app.agents.count', formattedAgents.length);

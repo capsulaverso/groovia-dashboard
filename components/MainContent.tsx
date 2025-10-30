@@ -32,32 +32,85 @@ const getColorClasses = (color: string): string => {
     return colorMap[color] || 'bg-gray-500 text-white';
 };
 
-const Header: React.FC<HeaderProps> = ({ onAdminClick, activeIntegrations }) => (
-    <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div className="flex items-center gap-4">
-            <h1 className="text-on-surface-light dark:text-on-surface-dark text-lg font-medium">Plugins</h1>
-            {activeIntegrations.map((integration) => (
-                <span 
-                    key={integration.id}
-                    className={`${getColorClasses(integration.color)} text-xs font-semibold px-3 py-1 rounded-full`}
+// Dados dos logos para o carrossel
+const LOGOS_DATA = [
+    { id: 1, name: 'OpenAI', icon: '🤖', bgColor: 'bg-green-500' },
+    { id: 2, name: 'Groq', icon: '⚡', bgColor: 'bg-orange-500' },
+    { id: 3, name: 'Anthropic', icon: '🧠', bgColor: 'bg-blue-500' },
+    { id: 4, name: 'Google AI', icon: '🔍', bgColor: 'bg-red-500' },
+    { id: 5, name: 'Microsoft', icon: '💼', bgColor: 'bg-purple-500' },
+    { id: 6, name: 'LangChain', icon: '🔗', bgColor: 'bg-teal-500' },
+    { id: 7, name: 'Dify', icon: '🎯', bgColor: 'bg-pink-500' },
+    { id: 8, name: 'N8N', icon: '⚙️', bgColor: 'bg-indigo-500' },
+    { id: 9, name: 'Capsula', icon: '☄️', bgColor: 'bg-cyan-500' },
+    { id: 10, name: 'Aeon', icon: '🌌', bgColor: 'bg-violet-500' },
+];
+
+const Header: React.FC<HeaderProps> = ({ onAdminClick, activeIntegrations }) => {
+    const carouselRef = useRef<HTMLDivElement>(null);
+    
+    return (
+        <header className="mb-8">
+            {/* Carrossel de Logos */}
+            <div className="relative group overflow-hidden mb-4">
+                {/* Gradiente esquerda */}
+                <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-background-light dark:from-background-dark to-transparent z-10 pointer-events-none" />
+                
+                {/* Gradiente direita */}
+                <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-background-light dark:from-background-dark to-transparent z-10 pointer-events-none" />
+                
+                {/* Carrossel Container */}
+                <div 
+                    ref={carouselRef}
+                    className="flex gap-6 overflow-x-auto scroll-smooth pb-4 px-2"
+                    style={{ 
+                        scrollbarWidth: 'none', 
+                        msOverflowStyle: 'none',
+                        WebkitOverflowScrolling: 'touch'
+                    }}
                 >
-                    {integration.name}
-                </span>
-            ))}
-        </div>
-        <div className="flex items-center gap-4">
-            <div className="relative w-full md:w-64">
-                <span className="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-secondary-light dark:text-on-surface-secondary-dark">search</span>
-                <input className="w-full bg-surface-light dark:bg-surface-dark border-none rounded-full pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary" placeholder="Buscar" type="text" />
+                    {LOGOS_DATA.map((logo) => (
+                        <div
+                            key={logo.id}
+                            className={`flex-shrink-0 w-20 h-20 ${logo.bgColor} rounded-xl flex flex-col items-center justify-center gap-1 transition-transform duration-300 hover:scale-110 hover:shadow-lg cursor-pointer group/logo`}
+                        >
+                            <span className="text-3xl">{logo.icon}</span>
+                            <span className="text-xs font-semibold text-white opacity-0 group-hover/logo:opacity-100 transition-opacity">
+                                {logo.name}
+                            </span>
+                        </div>
+                    ))}
+                </div>
             </div>
-            <UserMenu 
-                userName="João Silva"
-                userEmail="joao.silva@groovia.com"
-                onAdminClick={onAdminClick}
-            />
-        </div>
-    </header>
-);
+            
+            {/* Barra de busca e menu */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <h1 className="text-on-surface-light dark:text-on-surface-dark text-lg font-medium">Plugins</h1>
+                    {activeIntegrations.map((integration) => (
+                        <span 
+                            key={integration.id}
+                            className={`${getColorClasses(integration.color)} text-xs font-semibold px-3 py-1 rounded-full`}
+                        >
+                            {integration.name}
+                        </span>
+                    ))}
+                </div>
+                <div className="flex items-center gap-4">
+                    <div className="relative w-full md:w-64">
+                        <span className="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-secondary-light dark:text-on-surface-secondary-dark">search</span>
+                        <input className="w-full bg-surface-light dark:bg-surface-dark border-none rounded-full pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary" placeholder="Buscar" type="text" />
+                    </div>
+                    <UserMenu 
+                        userName="João Silva"
+                        userEmail="joao.silva@groovia.com"
+                        onAdminClick={onAdminClick}
+                    />
+                </div>
+            </div>
+        </header>
+    );
+};
 
 interface Agent {
     id: number;
@@ -75,7 +128,11 @@ interface Agent {
     controlCode?: string;
 }
 
-const MainContent: React.FC = () => {
+interface MainContentProps {
+    onNavigate?: (view: string) => void;
+}
+
+const MainContent: React.FC<MainContentProps> = ({ onNavigate }) => {
     const [activeWorkspace, setActiveWorkspace] = useState<AgentWorkspaceConfig | null>(null);
     const [showAdmin, setShowAdmin] = useState(false);
     const [showTooltip, setShowTooltip] = useState(true);
@@ -89,6 +146,13 @@ const MainContent: React.FC = () => {
     const { user } = useUser();
     const clientId = user?.clientId || 1;
     const { data: agents, loading: agentsLoading } = useApi<Agent[]>(`/agents?clientId=${clientId}`);
+    
+    // Função para obter progresso do agente
+    const getAgentProgress = (agentId: number): number => {
+        // Usar progresso do usuário ou valor aleatório baseado no ID para consistência
+        const seed = agentId % 100;
+        return Math.floor(seed * 0.5) + 20; // Valor entre 20 e 70
+    };
     
     // Atualizar data e hora
     useEffect(() => {
@@ -283,18 +347,18 @@ const MainContent: React.FC = () => {
 
     // 4 Gatilhos Inteligentes
     const smartShortcuts = [
-        { icon: 'description', label: 'Inserir Documentos', color: 'bg-blue-500' },
-        { icon: 'person', label: 'Completar Perfil', color: 'bg-green-500' },
-        { icon: 'lock', label: 'Acessar Cofre Pessoal', color: 'bg-purple-500' },
-        { icon: 'assessment', label: 'Ver Diagnóstico', color: 'bg-orange-500' }
+        { icon: 'description', label: 'Inserir Documentos', color: 'bg-blue-500', action: 'documents' },
+        { icon: 'person', label: 'Completar Perfil', color: 'bg-green-500', action: 'profile' },
+        { icon: 'lock', label: 'Acessar Cofre Pessoal', color: 'bg-purple-500', action: 'profile' }, // Irá para a aba Cofre no perfil
+        { icon: 'assessment', label: 'Ver Diagnóstico', color: 'bg-orange-500', action: 'my-agents' }
     ];
 
     // Groovia Flow - Dados dos Agentes
     const grooviaFlowItems = [
-        'Groovia Flow - Um quadro visual da sua estratégia em alto nível',
-        'Groove Board - Um plano detalhado no Notion com cada área do seu negócio, incluindo funis, tarefas e automações',
-        'DRE projetado com metas realistas',
-        'Plano de Execução da Campanha'
+        { text: 'Groovia Flow - Um quadro visual da sua estratégia em alto nível', action: 'strategy' },
+        { text: 'Groove Board - Um plano detalhado no Notion com cada área do seu negócio, incluindo funis, tarefas e automações', action: 'tactical' },
+        { text: 'DRE projetado com metas realistas', action: 'sales' },
+        { text: 'Plano de Execução da Campanha', action: 'marketing' }
     ];
 
     return (
@@ -325,27 +389,40 @@ const MainContent: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Linha 2: 4 Gatilhos Inteligentes Premium (Estilo iOS) */}
+                {/* Linha 2: 4 Gatilhos Inteligentes Premium (Estilo Premium Black & Green) */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {smartShortcuts.map((shortcut, index) => (
                         <button
                             key={index}
-                            className="relative overflow-hidden bg-gradient-to-br from-surface-light to-surface-light/80 dark:from-surface-dark dark:to-surface-dark/80 rounded-2xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-xl hover:scale-[1.02] hover:border-primary/30 transition-all duration-300 group"
+                            onClick={() => {
+                                if (onNavigate && shortcut.action) {
+                                    onNavigate(shortcut.action);
+                                }
+                            }}
+                            className="relative overflow-hidden bg-black dark:bg-neutral-900 rounded-2xl border border-neutral-800 dark:border-neutral-700 p-6 hover:border-[#38ff81] hover:shadow-[0_0_30px_rgba(56,255,129,0.3)] hover:scale-[1.02] transition-all duration-300 group font-['Poppins'] cursor-pointer"
+                            style={{ fontWeight: 300 }}
                         >
-                            <div className="flex flex-col items-start gap-4">
-                                <div className={`relative w-14 h-14 ${shortcut.color} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 group-hover:rotate-3`}>
-                                    <span className="material-icons-outlined text-white text-3xl">
+                            {/* Efeito de brilho no hover */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-[#38ff81]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            
+                            <div className="flex flex-col items-start gap-4 relative z-10">
+                                <div className="relative w-14 h-14 bg-gradient-to-br from-[#38ff81]/20 to-[#38ff81]/10 rounded-xl flex items-center justify-center group-hover:from-[#38ff81]/30 group-hover:to-[#38ff81]/20 transition-all duration-300 border border-[#38ff81]/20 group-hover:border-[#38ff81]/40">
+                                    <span className="material-icons-outlined text-[#38ff81] text-3xl group-hover:scale-110 transition-transform duration-300 drop-shadow-[0_0_8px_rgba(56,255,129,0.6)]">
                                         {shortcut.icon}
                                     </span>
-                                    <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-bold text-on-surface-light dark:text-on-surface-dark leading-tight text-left">
+                                    <p className="text-[14px] text-white dark:text-neutral-100 leading-tight text-left font-light">
                                         {shortcut.label}
                                     </p>
                                 </div>
                             </div>
-                            <div className="absolute top-0 right-0 w-20 h-20 bg-white/5 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-500"></div>
+                            
+                            {/* Decoração angular premium */}
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-[#38ff81]/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                            
+                            {/* Linha brilhante no hover */}
+                            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#38ff81] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         </button>
                     ))}
                 </div>
@@ -364,11 +441,16 @@ const MainContent: React.FC = () => {
                         {grooviaFlowItems.map((item, index) => (
                             <div 
                                 key={index}
+                                onClick={() => {
+                                    if (onNavigate && item.action) {
+                                        onNavigate(item.action);
+                                    }
+                                }}
                                 className="flex items-start gap-4 px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors cursor-pointer group"
                             >
                                 <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 group-hover:scale-150 transition-transform flex-shrink-0"></div>
                                 <span className="text-sm leading-tight text-on-surface-secondary-light dark:text-on-surface-secondary-dark group-hover:text-on-surface-light dark:group-hover:text-on-surface-dark transition-colors flex-1">
-                                    {item}
+                                    {item.text}
                                 </span>
                                 <span className="material-icons-outlined text-xs text-on-surface-secondary-light dark:text-on-surface-secondary-dark opacity-0 group-hover:opacity-100 transition-opacity">
                                     arrow_forward_ios
@@ -378,8 +460,6 @@ const MainContent: React.FC = () => {
                     </div>
                 </div>
             </div>
-
-            <Header onAdminClick={handleOpenAdmin} activeIntegrations={activeIntegrations} />
 
             <div className="mb-6">
                 <InstructionBox
@@ -394,73 +474,97 @@ const MainContent: React.FC = () => {
                 />
             </div>
 
-            <section className="mb-10">
-                <div className="flex items-center gap-4 mb-6">
-                    <h2 className="text-2xl font-semibold text-on-surface-light dark:text-on-surface-dark">O Diagnóstico Inteligente (SCAN)</h2>
-                    <span className="text-xs font-medium text-on-surface-secondary-light dark:text-on-surface-secondary-dark bg-surface-light dark:bg-surface-dark px-2 py-1 rounded-md border border-gray-200 dark:border-gray-700">Ato 01</span>
+            {/* Agentes Inteligentes - Ato 1 */}
+            <section className="mb-12">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                    <div>
+                        <h2 className="text-2xl font-semibold text-on-surface-light dark:text-on-surface-dark">
+                            Agentes Inteligentes - Ato 1
+                        </h2>
+                        <p className="text-sm text-on-surface-secondary-light dark:text-on-surface-secondary-dark">
+                            5 agentes especializados em diagnóstico estratégico empresarial powered by Capsula Aeon®
+                        </p>
+                    </div>
+                    <span className="inline-flex items-center gap-2 text-xs font-semibold text-[#00FF7F] bg-[#00FF7F]/10 px-3 py-1 rounded-full border border-[#00FF7F]/30">
+                        <span className="material-icons-outlined text-sm">psychology</span>
+                        {activeAgents.filter(a => a.act === 'Ato 01' || !a.act).length} agentes ativos
+                    </span>
                 </div>
 
                 {agentsLoading ? (
                     <div className="flex items-center justify-center py-12">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                     </div>
-                ) : activeAgents.length > 0 ? (
-                    <>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-6">
-                            {activeAgents
-                                .slice((currentPage - 1) * cardsPerPage, currentPage * cardsPerPage)
-                                .map(agent => (
-                                    <ScanCard 
-                                        key={agent.id} 
-                                        title={agent.title} 
-                                        description={agent.description} 
-                                        progress={Math.floor(Math.random() * 100)}
-                                    />
-                                ))
-                            }
-                        </div>
-
-                        {activeAgents.length > cardsPerPage && (
-                            <div className="flex items-center justify-center gap-2 mt-8">
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                    disabled={currentPage === 1}
-                                    className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-                                >
-                                    <span className="material-icons-outlined text-lg">chevron_left</span>
-                                    Anterior
-                                </button>
-
-                                <div className="flex items-center gap-1">
-                                    {Array.from({ length: totalPages }).map((_, index) => (
-                                        <button
-                                            key={index}
-                                            onClick={() => setCurrentPage(index + 1)}
-                                            className={`w-10 h-10 rounded-lg transition-colors ${
-                                                currentPage === index + 1
-                                                    ? 'bg-primary text-white'
-                                                    : 'border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                                            }`}
-                                        >
-                                            {index + 1}
-                                        </button>
-                                    ))}
-                                </div>
-
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                    disabled={currentPage === totalPages}
-                                    className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-                                >
-                                    Próximo
-                                    <span className="material-icons-outlined text-lg">chevron_right</span>
-                                </button>
-                            </div>
-                        )}
-                    </>
                 ) : (
-                    <div className="text-center py-12">
-                        <p className="text-gray-500 dark:text-gray-400">Nenhum agente disponível</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {activeAgents
+                            .filter(agent => {
+                                // Mostrar agentes do Ato 01, ou todos se não houver filtro
+                                return agent.act === 'Ato 01' || !agent.act || agent.act === null;
+                            })
+                            .slice(0, 6) // Limitar a 6 agentes
+                            .sort((a, b) => {
+                                const orderA = (a as any).metadata?.order || 0;
+                                const orderB = (b as any).metadata?.order || 0;
+                                return orderA - orderB;
+                            })
+                            .map(agent => {
+                                const contextProgress = getAgentProgress(agent.id);
+                                
+                                return (
+                                    <AgentCard
+                                        key={agent.id}
+                                        agent={{
+                                            id: String(agent.id),
+                                            title: agent.title,
+                                            description: agent.description,
+                                            agentType: agent.agentType,
+                                            internalCode: agent.internalCode,
+                                            contextProgress,
+                                            contextSaved: Math.floor(contextProgress * 0.8),
+                                            connectionProgress: agent.isActive ? 100 : 0,
+                                            act: agent.act || 'Ato 01',
+                                            function: agent.agentType,
+                                            controlCode: agent.internalCode,
+                                            isActive: agent.isActive,
+                                            integrations: agent.integrations || [],
+                                        }}
+                                        onClick={() => {
+                                            const agentData: AgentCardData = {
+                                                id: String(agent.id),
+                                                title: agent.title,
+                                                description: agent.description,
+                                                agentType: agent.agentType,
+                                                internalCode: agent.internalCode,
+                                                integrations: agent.integrations || [],
+                                                contextProgress,
+                                            };
+                                            handleOpenWorkspace(agentData);
+                                        }}
+                                        showProgress={true}
+                                        showStatus={true}
+                                        variant="detailed"
+                                    />
+                                );
+                            })}
+                    </div>
+                )}
+                
+                {!agentsLoading && activeAgents.length === 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {AGENT_CARDS_DATA.slice(0, 6).map((agent) => (
+                            <AgentCard
+                                key={agent.id}
+                                agent={agent}
+                                onClick={() => {
+                                    const agentData: AgentCardData = agent;
+                                    handleOpenWorkspace(agentData);
+                                }}
+                                showProgress={true}
+                                showStatus={true}
+                                variant="detailed"
+                            />
+                        ))}
                     </div>
                 )}
             </section>
