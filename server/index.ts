@@ -6,6 +6,13 @@ import { comparePassword } from './auth.js';
 import { testAIAgent, clearCache, getCacheStats } from './aiService.js';
 import { n8nService } from './n8nService.js';
 import { trace, context, SpanStatusCode } from '@opentelemetry/api';
+import { 
+  generateAgentRulesFromGPT, 
+  saveAgentRules, 
+  getAgentRules, 
+  generateAndSaveAgentRules,
+  applyRulesToMessage 
+} from './actions/gpt-action-generator.js';
 
 // Initialize OpenTelemetry tracing
 const tracer = trace.getTracer('groovia-dashboard', '1.0.0');
@@ -93,6 +100,36 @@ app.put('/api/users/:id', async (req, res) => {
   }
 });
 
+app.post('/api/users/:id/generate-hash', async (req, res) => {
+  try {
+    const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string);
+    if (!clientId) {
+      return res.status(400).json({ error: 'clientId is required' });
+    }
+    const userId = parseInt(req.params.id);
+    const { pool } = await import('./db.js');
+    
+    // Gerar novo hash único
+    const crypto = await import('crypto');
+    const newHash = `user_${userId}_${crypto.randomBytes(16).toString('hex')}`;
+    
+    // Atualizar no banco
+    const result = await pool.query(
+      'UPDATE users SET hash_identifier = $1, updated_at = NOW() WHERE id = $2 AND client_id = $3 RETURNING *',
+      [newHash, userId, clientId]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+    
+    res.json({ hash: newHash, success: true });
+  } catch (error) {
+    console.error('Erro ao gerar hash:', error);
+    res.status(500).json({ error: 'Erro ao gerar hash' });
+  }
+});
+
 app.delete('/api/users/:id', async (req, res) => {
   try {
     await storage.deleteUser(parseInt(req.params.id));
@@ -165,7 +202,14 @@ app.get('/api/agents', async (req, res) => {
         allowedAgentIds: agent.allowed_agent_ids || [],
         createdAt: agent.created_at,
         updatedAt: agent.updated_at,
-        act: (agent.capabilities as any)?.act || null
+        act: (agent.capabilities as any)?.act || null,
+        clientId: agent.client_id || 1,
+        skillsConfig: agent.skills_config || {},
+        workflowConfig: agent.workflow_config || {},
+        contextConfig: agent.context_config || {},
+        uiConfig: agent.ui_config || {},
+        knowledgeBase: agent.knowledge_base || null,
+        promptUrl: agent.prompt_url || null
       }));
 
       span.setAttribute('app.agents.count', formattedAgents.length);
@@ -195,7 +239,40 @@ app.get('/api/agents/:id', async (req, res) => {
     if (!agent) {
       return res.status(404).json({ error: 'Agente não encontrado' });
     }
-    res.json(agent);
+    
+    // Formatar agente para incluir campos do Agent Builder
+    const formattedAgent = {
+      ...agent,
+      id: agent.id,
+      title: agent.title,
+      description: agent.description,
+      agentType: agent.agent_type,
+      isActive: agent.is_active,
+      internalCode: agent.internal_code,
+      behaviorType: agent.behavior_type || 'autonomous',
+      capabilities: agent.capabilities || {},
+      integrations: agent.integrations || [],
+      aiModel: agent.ai_model || 'gpt-4o-mini',
+      aiProvider: agent.ai_provider || 'replit',
+      systemPrompt: agent.system_prompt || 'Você é um assistente inteligente e prestativo.',
+      fallbackPrompt: agent.fallback_prompt || 'Desculpe, houve um erro ao processar sua solicitação.',
+      webhookUrl: agent.webhook_url || '',
+      webhookEnabled: agent.webhook_enabled || false,
+      canCommunicateWithAgents: agent.can_communicate_with_agents || false,
+      allowedAgentIds: agent.allowed_agent_ids || [],
+      createdAt: agent.created_at,
+      updatedAt: agent.updated_at,
+      act: (agent.capabilities as any)?.act || null,
+      clientId: agent.client_id || 1,
+      skillsConfig: agent.skills_config || {},
+      workflowConfig: agent.workflow_config || {},
+      contextConfig: agent.context_config || {},
+      uiConfig: agent.ui_config || {},
+      knowledgeBase: agent.knowledge_base || null,
+      promptUrl: agent.prompt_url || null
+    };
+    
+    res.json(formattedAgent);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao buscar agente' });
   }
@@ -220,16 +297,50 @@ app.post('/api/agents', async (req, res) => {
 
 app.put('/api/agents/:id', async (req, res) => {
   try {
-    const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string);
-    if (!clientId) {
-      return res.status(400).json({ error: 'clientId is required' });
-    }
+    const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string) || 1;
+    console.log('✅ Atualizando agente:', req.params.id, 'para clientId:', clientId);
+    console.log('📦 Body recebido:', req.body);
     const agent = await storage.updateAgent(parseInt(req.params.id), clientId, req.body);
     if (!agent) {
       return res.status(404).json({ error: 'Agente não encontrado ou não pertence ao cliente' });
     }
-    res.json(agent);
+    
+    // Formatar agente para incluir campos do Agent Builder
+    const formattedAgent = {
+      ...agent,
+      id: agent.id,
+      title: agent.title,
+      description: agent.description,
+      agentType: agent.agent_type,
+      isActive: agent.is_active,
+      internalCode: agent.internal_code,
+      behaviorType: agent.behavior_type || 'autonomous',
+      capabilities: agent.capabilities || {},
+      integrations: agent.integrations || [],
+      aiModel: agent.ai_model || 'gpt-4o-mini',
+      aiProvider: agent.ai_provider || 'replit',
+      systemPrompt: agent.system_prompt || 'Você é um assistente inteligente e prestativo.',
+      fallbackPrompt: agent.fallback_prompt || 'Desculpe, houve um erro ao processar sua solicitação.',
+      webhookUrl: agent.webhook_url || '',
+      webhookEnabled: agent.webhook_enabled || false,
+      canCommunicateWithAgents: agent.can_communicate_with_agents || false,
+      allowedAgentIds: agent.allowed_agent_ids || [],
+      createdAt: agent.created_at,
+      updatedAt: agent.updated_at,
+      act: (agent.capabilities as any)?.act || null,
+      clientId: agent.client_id || 1,
+      skillsConfig: agent.skills_config || {},
+      workflowConfig: agent.workflow_config || {},
+      contextConfig: agent.context_config || {},
+      uiConfig: agent.ui_config || {},
+      knowledgeBase: agent.knowledge_base || null,
+      promptUrl: agent.prompt_url || null
+    };
+    
+    res.json(formattedAgent);
   } catch (error) {
+    console.error('❌ Erro ao atualizar agente:', error);
+    console.error('❌ Stack:', error instanceof Error ? error.stack : 'No stack');
     const message = error instanceof Error ? error.message : 'Erro ao atualizar agente';
     res.status(500).json({ error: message });
   }
@@ -237,13 +348,12 @@ app.put('/api/agents/:id', async (req, res) => {
 
 app.delete('/api/agents/:id', async (req, res) => {
   try {
-    const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string);
-    if (!clientId) {
-      return res.status(400).json({ error: 'clientId is required' });
-    }
+    const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string) || 1;
+    console.log('✅ Deletando agente:', req.params.id, 'para clientId:', clientId);
     await storage.deleteAgent(parseInt(req.params.id), clientId);
     res.status(204).send();
   } catch (error) {
+    console.error('❌ Erro ao deletar agente:', error);
     res.status(500).json({ error: 'Erro ao deletar agente' });
   }
 });
@@ -296,6 +406,34 @@ app.get('/api/users/:userId/documents', async (req, res) => {
   }
 });
 
+// Alias para compatibilidade com ProfilePage
+app.get('/api/documents', async (req, res) => {
+  try {
+    const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+    const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string);
+    if (!clientId) {
+      return res.status(400).json({ error: 'clientId is required' });
+    }
+    if (userId) {
+      const documents = await storage.getUserDocuments(userId, clientId);
+      
+      // Formatar documentos para ProfilePage
+      const formattedDocuments = documents.map((doc: any) => ({
+        ...doc,
+        uploadedAt: doc.uploadDate || doc.uploadedAt,
+        isVisible: !doc.isPrivate
+      }));
+      
+      res.json(formattedDocuments);
+    } else {
+      res.status(400).json({ error: 'userId is required' });
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Erro ao buscar documentos';
+    res.status(500).json({ error: message });
+  }
+});
+
 app.post('/api/documents', async (req, res) => {
   try {
     const clientId = parseInt(req.headers['x-client-id'] as string) || parseInt(req.query.clientId as string);
@@ -341,6 +479,39 @@ app.get('/api/users/:userId/conversations', async (req, res) => {
   }
 });
 
+// Alias para compatibilidade com ProfilePage
+app.get('/api/conversations', async (req, res) => {
+  try {
+    const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+    const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string);
+    if (!clientId) {
+      return res.status(400).json({ error: 'clientId is required' });
+    }
+    if (userId) {
+      const conversations = await storage.getUserConversations(userId, clientId);
+      
+      // Formatar conversas para incluir nome do agente
+      const formattedConversations = await Promise.all(conversations.map(async (conv: any) => {
+        if (conv.agentId) {
+          const agent = await storage.getAgent(conv.agentId, clientId);
+          return {
+            ...conv,
+            agentName: agent?.title || 'Agente Desconhecido'
+          };
+        }
+        return conv;
+      }));
+      
+      res.json(formattedConversations);
+    } else {
+      res.status(400).json({ error: 'userId is required' });
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Erro ao buscar conversas';
+    res.status(500).json({ error: message });
+  }
+});
+
 app.get('/api/conversations/:id', async (req, res) => {
   try {
     const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string);
@@ -360,16 +531,28 @@ app.get('/api/conversations/:id', async (req, res) => {
 app.post('/api/conversations', async (req, res) => {
   try {
     const clientId = parseInt(req.headers['x-client-id'] as string) || parseInt(req.query.clientId as string);
+    const userId = parseInt(req.headers['x-user-id'] as string) || parseInt(req.query.userId as string) || req.body.userId;
+    
     if (!clientId) {
       return res.status(400).json({ error: 'clientId is required' });
+    }
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
     }
     if (req.body.clientId && req.body.clientId !== clientId) {
       return res.status(400).json({ error: 'clientId mismatch' });
     }
-    const conversation = await storage.createConversation({ ...req.body, clientId });
+    
+    const conversation = await storage.createConversation({ 
+      ...req.body, 
+      clientId, 
+      userId,
+      messageCount: 0
+    });
     res.status(201).json(conversation);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Erro ao criar conversa';
+    console.error('❌ Erro ao criar conversa:', error);
     res.status(500).json({ error: message });
   }
 });
@@ -418,6 +601,163 @@ app.get('/api/users/:userId/progress', async (req, res) => {
   } catch (error) {
     console.error('❌ Erro ao buscar progresso:', error);
     const message = error instanceof Error ? error.message : 'Erro ao buscar progresso';
+    res.status(500).json({ error: message });
+  }
+});
+
+// Calendar Events (mock para MVP)
+app.get('/api/calendar/events', async (req, res) => {
+  try {
+    const userId = parseInt(req.query.userId as string);
+    const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string) || 1;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    // Mock data para MVP - eventos baseados em agentes e conversas
+    try {
+      const agents = await storage.getAgents(clientId);
+      const conversations = await storage.getUserConversations(userId, clientId);
+      
+      const today = new Date();
+      const events = conversations.slice(0, 5).map((conv: any, index: number) => {
+        const agent = agents.find((a: any) => a.id === conv.agentId);
+        const eventDate = new Date(today);
+        eventDate.setDate(eventDate.getDate() + index);
+        
+        return {
+          id: conv.id,
+          title: `Entrega: ${conv.title}`,
+          agentName: agent?.title || 'Agente Desconhecido',
+          agentInternalCode: `AGT-${String(conv.agentId).padStart(3, '0')}`,
+          date: eventDate.toISOString().split('T')[0],
+          time: `${14 + index}:00`,
+          status: index === 0 ? 'confirmed' : index === 1 ? 'pending' : 'late',
+          type: 'delivery' as const,
+          link: `/documents`
+        };
+      });
+      
+      res.json(events);
+    } catch (dbError) {
+      // Fallback para mock estático se houver erro no banco
+      const today = new Date();
+      res.json([
+        {
+          id: 1,
+          title: 'Dossiê Estratégico v1',
+          agentName: 'SCAN: O Decodificador',
+          agentInternalCode: 'AGT-SC-001',
+          date: today.toISOString().split('T')[0],
+          time: '14:00',
+          status: 'confirmed',
+          type: 'delivery',
+          link: '/documents'
+        }
+      ]);
+    }
+  } catch (error) {
+    console.error('❌ Erro ao buscar eventos do calendário:', error);
+    const message = error instanceof Error ? error.message : 'Erro ao buscar eventos';
+    res.status(500).json({ error: message });
+  }
+});
+
+// Decisions History (mock para MVP)
+app.get('/api/decisions', async (req, res) => {
+  try {
+    const userId = parseInt(req.query.userId as string);
+    const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string) || 1;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    // Mock data para MVP - decisões baseadas em conversas e agentes
+    try {
+      const agents = await storage.getAgents(clientId);
+      const conversations = await storage.getUserConversations(userId, clientId);
+      
+      const decisions = conversations.slice(0, 3).map((conv: any, index: number) => {
+        const agent = agents.find((a: any) => a.id === conv.agentId);
+        const decisionDate = new Date();
+        decisionDate.setHours(decisionDate.getHours() - (index + 1) * 2);
+        
+        return {
+          id: conv.id,
+          date: decisionDate.toISOString(),
+          agentName: agent?.title || 'Agente Desconhecido',
+          agentInternalCode: `AGT-${String(conv.agentId).padStart(3, '0')}`,
+          decision: conv.title || 'Decisão estratégica',
+          justification: `Baseado na análise do agente ${agent?.title || 'Desconhecido'}`,
+          status: index === 0 ? 'approved' : index === 1 ? 'pending' : 'rejected',
+          relatedDocuments: conv.messageCount > 0 ? [`Conversa-${conv.id}.txt`] : [],
+          impact: index === 0 ? 'high' : index === 1 ? 'medium' : 'low' as const
+        };
+      });
+      
+      res.json(decisions);
+    } catch (dbError) {
+      // Fallback para mock estático se houver erro no banco
+      const decisionDate = new Date(Date.now() - 1000 * 60 * 60 * 2);
+      res.json([
+        {
+          id: 1,
+          date: decisionDate.toISOString(),
+          agentName: 'SCAN: O Decodificador',
+          agentInternalCode: 'AGT-SC-001',
+          decision: 'Aprovar estratégia de posicionamento no mercado premium',
+          justification: 'Análise detalhada do mercado e concorrência indicam oportunidade clara no segmento premium.',
+          status: 'approved',
+          relatedDocuments: ['Dossiê Estratégico v1.pdf'],
+          impact: 'high'
+        }
+      ]);
+    }
+  } catch (error) {
+    console.error('❌ Erro ao buscar decisões:', error);
+    const message = error instanceof Error ? error.message : 'Erro ao buscar decisões';
+    res.status(500).json({ error: message });
+  }
+});
+
+// Notifications (mock para MVP)
+app.get('/api/notifications', async (req, res) => {
+  try {
+    const userId = parseInt(req.query.userId as string);
+    const clientId = parseInt(req.query.clientId as string);
+
+    if (!userId || !clientId) {
+      return res.status(400).json({ error: 'userId and clientId are required' });
+    }
+
+    // Mock data para MVP
+    const mockNotifications = [
+      {
+        id: 1,
+        type: 'agent',
+        title: 'Agente SCAN concluiu diagnósticos',
+        description: 'O agente SCAN finalizou a análise inicial do negócio.',
+        timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+        status: 'new',
+        actionUrl: '/profile'
+      },
+      {
+        id: 2,
+        type: 'document',
+        title: 'Novo dossiê disponível',
+        description: 'O dossiê estratégico foi gerado e está pronto para visualização.',
+        timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+        status: 'new',
+        actionUrl: '/documents'
+      }
+    ];
+
+    res.json(mockNotifications);
+  } catch (error) {
+    console.error('❌ Erro ao buscar notificações:', error);
+    const message = error instanceof Error ? error.message : 'Erro ao buscar notificações';
     res.status(500).json({ error: message });
   }
 });
@@ -800,27 +1140,52 @@ app.post('/api/agents/:id/respond', async (req, res) => {
       conversationId
     });
 
-    // Enviar mensagem para N8N
-    console.log('📤 Enviando para N8N...');
-    const n8nResponse = await n8nService.processMessage({
-      message,
-      agentName,
-      clientName,
-      userId,
-      agentId,
-      conversationId,
+    // USAR APENAS AI DIRETA - SEM N8N
+    let n8nResult;
+    let processedByN8N = false;
+    
+    console.log('🤖 Usando apenas AI direta (N8N desabilitado)');
+    
+    // AI direta usando system prompt do agente
+    const { testAIAgent } = await import('./aiService.js');
+    
+    // agent vem do banco em snake_case
+    const aiProvider = agent.ai_provider || 'replit';
+    const aiModel = agent.ai_model || 'gpt-4o-mini';
+    const systemPrompt = agent.system_prompt || 'Você é um assistente inteligente e prestativo.';
+    const fallbackPrompt = agent.fallback_prompt || 'Desculpe, não consegui processar sua solicitação.';
+    
+    console.log('🤖 Configuração AI:', { aiProvider, aiModel });
+    console.log('📋 System Prompt:', systemPrompt.substring(0, 100) + '...');
+    
+    const aiResponse = await testAIAgent({
+      provider: aiProvider as any,
+      model: aiModel,
+      systemPrompt,
+      testMessage: message,
+      fallbackPrompt,
     });
+    
+    n8nResult = {
+      text: aiResponse.response || fallbackPrompt,
+      blocks: undefined,
+      raw: { aiDirect: true, latency: aiResponse.latencyMs },
+    };
+    
+    console.log('✅ AI direta processou com sucesso');
+    console.log('📝 Resposta:', n8nResult.text.substring(0, 100) + '...');
 
     // Criar mensagem do agente no banco
     const agentMessage = await storage.createMessage({
       conversationId,
       sender: 'agent',
-      content: n8nResponse,
-      messageType: 'text',
+      content: n8nResult.text,
+      messageType: n8nResult.blocks && n8nResult.blocks.length > 0 ? 'blocks' : 'text',
       metadata: {
         agentId,
-        processedByN8N: true,
+        processedByN8N,
         timestamp: new Date().toISOString(),
+        blocks: n8nResult.blocks,
       },
     }, clientId);
 
@@ -829,11 +1194,162 @@ app.post('/api/agents/:id/respond', async (req, res) => {
     res.json({
       success: true,
       message: agentMessage,
-      n8nResponse: n8nResponse,
+      n8nResponse: n8nResult,
     });
   } catch (error) {
     console.error('❌ Erro ao processar resposta do agente:', error);
     const message = error instanceof Error ? error.message : 'Erro ao processar resposta';
+    res.status(500).json({ 
+      success: false, 
+      error: message 
+    });
+  }
+});
+
+// =============================================
+// 🤖 GPT Action Generator Endpoints
+// =============================================
+
+// Gerar prompts e regras via GPT para um agente
+app.post('/api/agents/:id/generate-rules', async (req, res) => {
+  try {
+    const agentId = parseInt(req.params.id);
+    const { agentType, agentPurpose, context, exampleInput, exampleOutput } = req.body;
+
+    if (!agentType || !agentPurpose) {
+      return res.status(400).json({ 
+        error: 'agentType e agentPurpose são obrigatórios' 
+      });
+    }
+
+    console.log(`🤖 Gerando regras para agente ${agentId}...`);
+    
+    const rulesStructure = await generateAndSaveAgentRules(agentId, {
+      agentType,
+      agentPurpose,
+      context,
+      exampleInput,
+      exampleOutput
+    });
+
+    res.json({
+      success: true,
+      data: rulesStructure
+    });
+  } catch (error) {
+    console.error('❌ Erro ao gerar regras:', error);
+    const message = error instanceof Error ? error.message : 'Erro desconhecido';
+    res.status(500).json({ 
+      success: false, 
+      error: message 
+    });
+  }
+});
+
+// Buscar regras de um agente
+app.get('/api/agents/:id/rules', async (req, res) => {
+  try {
+    const agentId = parseInt(req.params.id);
+    
+    const rules = await getAgentRules(agentId);
+    
+    if (!rules) {
+      return res.status(404).json({ 
+        error: 'Agente não encontrado' 
+      });
+    }
+
+    res.json({
+      success: true,
+      data: rules
+    });
+  } catch (error) {
+    console.error('❌ Erro ao buscar regras:', error);
+    const message = error instanceof Error ? error.message : 'Erro desconhecido';
+    res.status(500).json({ 
+      success: false, 
+      error: message 
+    });
+  }
+});
+
+// Testar regras em uma mensagem
+app.post('/api/agents/:id/test-rules', async (req, res) => {
+  try {
+    const agentId = parseInt(req.params.id);
+    const { message } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ 
+        error: 'message é obrigatório' 
+      });
+    }
+
+    const rules = await getAgentRules(agentId);
+    
+    if (!rules) {
+      return res.status(404).json({ 
+        error: 'Agente não encontrado' 
+      });
+    }
+
+    const matchedRule = applyRulesToMessage(message, rules.rules);
+
+    res.json({
+      success: true,
+      data: {
+        message,
+        matched: matchedRule !== null,
+        rule: matchedRule
+      }
+    });
+  } catch (error) {
+    console.error('❌ Erro ao testar regras:', error);
+    const message = error instanceof Error ? error.message : 'Erro desconhecido';
+    res.status(500).json({ 
+      success: false, 
+      error: message 
+    });
+  }
+});
+
+// Gerar apenas prompts (sem salvar)
+app.post('/api/gpt/generate-prompts', async (req, res) => {
+  try {
+    const { agentType, agentPurpose, context, exampleInput, exampleOutput } = req.body;
+
+    if (!agentType || !agentPurpose) {
+      return res.status(400).json({ 
+        error: 'agentType e agentPurpose são obrigatórios' 
+      });
+    }
+
+    console.log('🤖 Gerando prompts via GPT...');
+    
+    const response = await generateAgentRulesFromGPT({
+      agentType,
+      agentPurpose,
+      context,
+      exampleInput,
+      exampleOutput
+    });
+
+    res.json({
+      success: true,
+      data: response
+    });
+  } catch (error) {
+    console.error('❌ Erro ao gerar prompts:', error);
+    const message = error instanceof Error ? error.message : 'Erro desconhecido';
+    
+    // Se for erro de API key não configurada, retornar erro específico
+    if (message.includes('API key') || message.includes('Nenhuma API key')) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Configure VERCEL_GATEWAY_API_KEY ou OPENAI_API_KEY no .env' 
+      });
+    }
+    
     res.status(500).json({ 
       success: false, 
       error: message 
