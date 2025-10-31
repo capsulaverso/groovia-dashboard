@@ -25,6 +25,11 @@
     font-size: 12px;
     font-weight: 300;
   }
+  
+  /* Classe utilitária para tela de exibição */
+  .font-display {
+    font-family: 'Poppins', sans-serif;
+  }
 }
 
 /* Animação do efeito shimmer (luz passando) */

@@ -15,6 +15,7 @@ interface Message {
     sender: 'user' | 'agent';
     content: string;
     timestamp: Date;
+    blocks?: any[];
 }
 
 const PremiumChatUltraSimple: React.FC<PremiumChatUltraSimpleProps> = ({
@@ -99,6 +100,7 @@ const PremiumChatUltraSimple: React.FC<PremiumChatUltraSimpleProps> = ({
                     sender: m.sender as 'user' | 'agent',
                     content: m.content,
                     timestamp: new Date(m.timestamp || m.createdAt),
+                    blocks: m.metadata?.blocks,
                 }));
 
                 setMessages(mappedMessages);
@@ -164,6 +166,7 @@ const PremiumChatUltraSimple: React.FC<PremiumChatUltraSimpleProps> = ({
                     sender: 'agent',
                     content: response.message.content,
                     timestamp: new Date(response.message.timestamp || Date.now()),
+                    blocks: response.message.metadata?.blocks,
                 };
                 setMessages(prev => [...prev, agentMsg]);
             }
@@ -188,7 +191,7 @@ const PremiumChatUltraSimple: React.FC<PremiumChatUltraSimpleProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 bg-background-light dark:bg-background-dark">
+        <div className="font-display fixed inset-0 z-50 bg-background-light dark:bg-background-dark text-on-surface-light dark:text-on-surface-dark">
             {/* Header */}
             <div className="h-16 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
                 <div>
@@ -223,7 +226,54 @@ const PremiumChatUltraSimple: React.FC<PremiumChatUltraSimpleProps> = ({
                                         ? 'bg-primary text-white'
                                         : 'bg-gray-100 dark:bg-gray-800 text-on-surface-light dark:text-on-surface-dark'
                                 }`}>
-                                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                                    {Array.isArray(msg.blocks) && msg.blocks.length > 0 ? (
+                                        <div className="space-y-3">
+                                            {msg.blocks.map((b: any, i: number) => {
+                                                if (b.type === 'loading') {
+                                                    return (
+                                                        <div key={i} className="flex items-center gap-2 text-sm opacity-80">
+                                                            <span className="animate-spin material-icons-outlined text-base">refresh</span>
+                                                            <span>{b.message || 'Processando...'}</span>
+                                                        </div>
+                                                    );
+                                                }
+                                                if (b.type === 'checklist') {
+                                                    return (
+                                                        <div key={i}>
+                                                            {b.title && <p className="font-medium mb-1">{b.title}</p>}
+                                                            <ul className="list-disc ml-5 space-y-1">
+                                                                {(b.items || []).map((it: any) => (
+                                                                    <li key={it.id} className="text-sm">
+                                                                        {it.checked ? '✅' : '⬜'} {it.label}
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    );
+                                                }
+                                                if (b.type === 'action') {
+                                                    return (
+                                                        <button key={i} className="px-3 py-2 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-700">
+                                                            {b.label || 'Ação'}
+                                                        </button>
+                                                    );
+                                                }
+                                                if (b.type === 'chart') {
+                                                    return (
+                                                        <div key={i} className="text-xs opacity-80">
+                                                            {b.title ? `Gráfico: ${b.title}` : 'Gráfico'}
+                                                        </div>
+                                                    );
+                                                }
+                                                // default: text
+                                                return (
+                                                    <p key={i} className="whitespace-pre-wrap">{b.text || ''}</p>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                                    )}
                                     <p className="text-xs opacity-70 mt-1">
                                         {msg.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                                     </p>

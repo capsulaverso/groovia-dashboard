@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { ChatModalProps, ChatMessage } from '../types';
 import { MessageRenderer } from './messages';
 
@@ -12,13 +12,16 @@ const ChatModal: React.FC<ChatModalProps> = ({
     agentId,
     aiProvider = 'replit',
     aiModel = 'gpt-4o-mini',
-    systemPrompt = 'Você é um assistente inteligente e prestativo.'
+    systemPrompt = 'Você é um assistente inteligente e prestativo.',
+    fallbackPrompt = 'Olá! Como posso ajudar você hoje?'
 }) => {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [inputMessage, setInputMessage] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const isTypingAnimationRef = useRef(false);
+    const initializedRef = useRef(false);
 
     const handleApprovalAction = (requestId: string, optionId: string, optionValue: string) => {
         setMessages(prev => prev.map(msg => {
@@ -50,21 +53,52 @@ const ChatModal: React.FC<ChatModalProps> = ({
         scrollToBottom();
     }, [messages]);
 
-    // Resetar estado e adicionar mensagem de boas-vindas quando o modal abre
+    // Função para animar digitação
+    const typeMessage = useCallback((fullText: string, callback: (msg: string) => void) => {
+        let i = 0;
+        const typingInterval = setInterval(() => {
+            if (i < fullText.length) {
+                callback(fullText.slice(0, i + 1));
+                i++;
+            } else {
+                clearInterval(typingInterval);
+                isTypingAnimationRef.current = false;
+            }
+        }, 30); // Velocidade de digitação (30ms por caractere)
+    }, []);
+
+    // Resetar estado quando fechar o modal
     useEffect(() => {
-        if (isOpen) {
-            setMessages([
-                {
-                    id: '1',
-                    sender: 'agent',
-                    message: `Olá! Sou o **${agentTitle}**. ${agentDescription}\n\nComo posso ajudar você hoje?`,
-                    timestamp: new Date()
-                }
-            ]);
+        if (!isOpen) {
+            initializedRef.current = false;
+            isTypingAnimationRef.current = false;
+        }
+    }, [isOpen]);
+    
+    // Adicionar mensagem de boas-vindas quando o modal abre
+    useEffect(() => {
+        if (isOpen && !initializedRef.current) {
+            initializedRef.current = true;
             setInputMessage('');
             setIsTyping(false);
+            setError(null);
+            
+            // Usar fallbackPrompt personalizado do agente
+            const welcomeMessage = fallbackPrompt;
+            
+            // Animar digitação
+            typeMessage(welcomeMessage, (typedText) => {
+                setMessages([
+                    {
+                        id: '1',
+                        sender: 'agent',
+                        message: typedText,
+                        timestamp: new Date()
+                    }
+                ]);
+            });
         }
-    }, [isOpen, agentTitle, agentDescription]);
+    }, [isOpen, typeMessage, fallbackPrompt]);
 
     const handleSendMessage = async () => {
         if (!inputMessage.trim()) return;
@@ -143,7 +177,7 @@ const ChatModal: React.FC<ChatModalProps> = ({
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
             <div 
-                className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col"
+                className="font-display bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col text-on-surface-light dark:text-on-surface-dark"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header do Modal */}

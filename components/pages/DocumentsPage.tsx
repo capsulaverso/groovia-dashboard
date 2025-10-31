@@ -23,6 +23,9 @@ const DocumentsPage: React.FC = () => {
     const [showTranscriptionSidebar, setShowTranscriptionSidebar] = useState(false);
     const [transcriptionText, setTranscriptionText] = useState('');
     const [uploading, setUploading] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filterVisible, setFilterVisible] = useState<'all' | 'visible' | 'hidden'>('all');
+    const [sortBy, setSortBy] = useState<'date' | 'name' | 'size'>('date');
 
     // Usar valores fixos por enquanto para evitar problemas
     const userId = user?.id ? parseInt(user.id) : 1;
@@ -104,7 +107,6 @@ const DocumentsPage: React.FC = () => {
         setShowUploadModal(true);
     };
 
-
     const handleApprove = async (doc: DocumentWithTranscription) => {
         try {
             // Salvar no banco de dados através da API
@@ -171,217 +173,259 @@ const DocumentsPage: React.FC = () => {
         setShowTranscriptionSidebar(true);
     };
 
+    // Filtros e ordenação
+    const filteredAndSortedDocs = React.useMemo(() => {
+        let filtered = documents;
+        
+        // Filtrar por busca
+        if (searchQuery) {
+            filtered = filtered.filter(doc => 
+                doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                doc.type.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
+        
+        // Ordenar
+        filtered.sort((a, b) => {
+            switch (sortBy) {
+                case 'name':
+                    return a.name.localeCompare(b.name);
+                case 'size':
+                    return (parseFloat(a.size) || 0) - (parseFloat(b.size) || 0);
+                case 'date':
+                default:
+                    return new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime();
+            }
+        });
+        
+        return filtered;
+    }, [documents, searchQuery, sortBy]);
+
     return (
-        <div className="flex gap-6 h-[calc(100vh-200px)]">
-            {/* Área Principal */}
-            <div className={`flex-1 ${showTranscriptionSidebar ? 'w-2/3' : 'w-full'} transition-all duration-300`}>
-                <div className="space-y-6 h-full flex flex-col">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-title font-semibold text-on-surface-light dark:text-on-surface-dark mb-2">
+        <div className="space-y-8 max-w-7xl">
+            {/* Header Premium com Layout em Duas Colunas */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-black to-neutral-900 rounded-3xl border border-neutral-800 p-8">
+                {/* Decoração de fundo */}
+                <div className="absolute top-0 right-0 w-96 h-96 bg-[#38ff81]/5 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-0 left-0 w-72 h-72 bg-[#38ff81]/5 rounded-full blur-3xl"></div>
+                
+                <div className="relative flex items-center justify-between">
+                    <div>
+                        <div className="flex items-center gap-3 mb-3">
+                            <h1 className="text-4xl font-bold text-white">
                                 Meus Documentos
                             </h1>
-                            <p className="text-body text-on-surface-secondary-light dark:text-on-surface-secondary-dark">
-                                Gerencie seus documentos e revise transcrições
-                            </p>
                         </div>
-                        <button 
-                            onClick={handleUploadClick}
-                            className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl hover:bg-primary/90 transition-colors shadow-lg shadow-primary/30"
-                        >
-                            <span className="material-icons-outlined">upload_file</span>
-                            <span className="font-medium">Upload</span>
-                        </button>
+                        <p className="text-neutral-400 text-lg">
+                            Gerencie seus documentos e revise transcrições
+                        </p>
                     </div>
-
-                    {/* Aviso LGPD */}
-                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-xl p-4">
-                        <div className="flex items-start gap-3">
-                            <span className="material-icons-outlined text-yellow-600 dark:text-yellow-500">info</span>
-                            <div className="flex-1">
-                                <h3 className="font-semibold text-body text-yellow-800 dark:text-yellow-200 mb-1">
-                                    Política de Privacidade
-                                </h3>
-                                <p className="text-sm text-yellow-700 dark:text-yellow-300 text-body">
-                                    Seus documentos serão armazenados com segurança e podem ser excluídos a qualquer momento.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Loading State */}
-                    {loading && (
-                        <div className="flex-1 bg-surface-light dark:bg-surface-dark rounded-2xl border border-gray-200 dark:border-gray-700 flex items-center justify-center">
-                            <div className="text-center">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-                                <p className="mt-4 text-body text-on-surface-secondary-light dark:text-on-surface-secondary-dark">
-                                    Carregando documentos...
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Error State */}
-                    {error && !loading && (
-                        <div className="flex-1 bg-surface-light dark:bg-surface-dark rounded-2xl border border-red-200 dark:border-red-700 flex items-center justify-center">
-                            <div className="text-center text-red-500">
-                                <span className="material-icons-outlined text-6xl mb-4">error</span>
-                                <p className="text-title font-semibold">Erro ao carregar documentos</p>
-                                <p className="text-body mt-2">{error}</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Lista de Documentos */}
-                    {!loading && !error && (
-                        <div className="flex-1 bg-surface-light dark:bg-surface-dark rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                            <div className="overflow-y-auto h-full">
-                                <table className="w-full">
-                                <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-on-surface-secondary-light dark:text-on-surface-secondary-dark uppercase">
-                                            Status
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-on-surface-secondary-light dark:text-on-surface-secondary-dark uppercase">
-                                            Documento
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-on-surface-secondary-light dark:text-on-surface-secondary-dark uppercase">
-                                            Tamanho
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-on-surface-secondary-light dark:text-on-surface-secondary-dark uppercase">
-                                            Upload
-                                        </th>
-                                        <th className="px-6 py-4 text-right text-xs font-semibold text-on-surface-secondary-light dark:text-on-surface-secondary-dark uppercase">
-                                            Ações
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                    {documents.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={5} className="px-6 py-12 text-center">
-                                                <span className="material-icons-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4 block">folder_open</span>
-                                                <h3 className="text-title font-semibold text-on-surface-light dark:text-on-surface-dark mb-2">
-                                                    Nenhum documento ainda
-                                                </h3>
-                                                <p className="text-body text-on-surface-secondary-light dark:text-on-surface-secondary-dark mb-4">
-                                                    Faça upload do seu primeiro documento para começar
-                                                </p>
-                                                <button
-                                                    onClick={handleUploadClick}
-                                                    className="inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl hover:bg-primary/90 transition-colors"
-                                                >
-                                                    <span className="material-icons-outlined">upload_file</span>
-                                                    <span className="font-medium">Upload Agora</span>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        documents.map((doc) => (
-                                            <tr key={doc.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                                <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${
-                                                        doc.status === 'approved' 
-                                                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                                                            : doc.status === 'transcribed'
-                                                            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-                                                            : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
-                                                    }`}>
-                                                        <span className="material-icons-outlined text-xs">
-                                                            {doc.status === 'approved' ? 'check_circle' : doc.status === 'transcribed' ? 'auto_awesome' : 'schedule'}
-                                                        </span>
-                                                        {doc.status === 'approved' ? 'Aprovado' : doc.status === 'transcribed' ? 'Transcrito' : 'Pendente'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="material-icons-outlined text-primary text-2xl">
-                                                            {getTypeIcon(doc.type)}
-                                                        </span>
-                                                        <div>
-                                                            <div className="font-medium text-on-surface-light dark:text-on-surface-dark text-body">
-                                                                {doc.name}
-                                                            </div>
-                                                            <div className="text-xs text-on-surface-secondary-light dark:text-on-surface-secondary-dark">
-                                                                {doc.type}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-on-surface-secondary-light dark:text-on-surface-secondary-dark">
-                                                    {doc.size}
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-on-surface-secondary-light dark:text-on-surface-secondary-dark">
-                                                    {new Date(doc.uploadDate).toLocaleDateString('pt-BR')}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center justify-end gap-2">
-                                                        {doc.transcription && (
-                                                            <button
-                                                                onClick={() => handleViewTranscription(doc)}
-                                                                className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                                                                title="Ver transcrição"
-                                                            >
-                                                                <span className="material-icons-outlined text-blue-600 dark:text-blue-400">description</span>
-                                                            </button>
-                                                        )}
-                                                        <button
-                                                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                                            title="Baixar"
-                                                        >
-                                                            <span className="material-icons-outlined text-gray-600 dark:text-gray-400">download</span>
-                                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(typeof doc.id === 'string' ? doc.id : doc.id)}
-                                            className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                                            title="Excluir"
-                                        >
-                                            <span className="material-icons-outlined text-red-600 dark:text-red-400">delete</span>
-                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    )}
+                    <button 
+                        onClick={handleUploadClick}
+                        className="flex items-center gap-2 bg-[#38ff81] text-black px-6 py-3 rounded-xl hover:bg-[#38ff81]/90 transition-colors shadow-lg shadow-[#38ff81]/30 font-semibold"
+                    >
+                        <span className="material-icons-outlined">upload_file</span>
+                        <span>Upload</span>
+                    </button>
                 </div>
             </div>
 
+            {/* Barra de Filtros e Busca */}
+            <div className="flex items-center gap-4">
+                {/* Busca */}
+                <div className="flex-1 relative">
+                    <span className="material-icons-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500">
+                        search
+                    </span>
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Buscar documentos..."
+                        className="w-full pl-10 pr-4 py-2 bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-700 rounded-xl text-neutral-900 dark:text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-[#38ff81]"
+                    />
+                </div>
+                
+                {/* Filtro de Visibilidade */}
+                <select
+                    value={filterVisible}
+                    onChange={(e) => setFilterVisible(e.target.value as 'all' | 'visible' | 'hidden')}
+                    className="px-4 py-2 bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-700 rounded-xl text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#38ff81]"
+                >
+                    <option value="all">Exibir: Todos</option>
+                    <option value="visible">Visíveis</option>
+                    <option value="hidden">Ocultos</option>
+                </select>
+                
+                {/* Ordenação */}
+                <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as 'date' | 'name' | 'size')}
+                    className="px-4 py-2 bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-700 rounded-xl text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#38ff81]"
+                >
+                    <option value="date">Ordenar: Data</option>
+                    <option value="name">Nome</option>
+                    <option value="size">Tamanho</option>
+                </select>
+            </div>
+
+            {/* Aviso LGPD */}
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                    <span className="material-icons-outlined text-yellow-600 dark:text-yellow-500">info</span>
+                    <div className="flex-1">
+                        <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-1">
+                            Política de Privacidade
+                        </h3>
+                        <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                            Seus documentos serão armazenados com segurança e podem ser excluídos a qualquer momento.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Loading State */}
+            {loading && (
+                <div className="bg-neutral-800 rounded-2xl border border-neutral-700 flex items-center justify-center p-12">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#38ff81] mx-auto"></div>
+                        <p className="mt-4 text-neutral-400">
+                            Carregando documentos...
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Error State */}
+            {error && !loading && (
+                <div className="bg-neutral-800 rounded-2xl border border-red-700 flex items-center justify-center p-12">
+                    <div className="text-center text-red-400">
+                        <span className="material-icons-outlined text-6xl mb-4">error</span>
+                        <p className="text-xl font-semibold">Erro ao carregar documentos</p>
+                        <p className="mt-2 text-neutral-400">{error}</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Lista de Documentos */}
+            {!loading && !error && (
+                <div className="bg-gradient-to-br from-neutral-900 to-black rounded-3xl border border-neutral-800 overflow-hidden">
+                    <div className="overflow-y-auto max-h-[600px]">
+                        {filteredAndSortedDocs.length === 0 ? (
+                            <div className="p-12 text-center">
+                                <span className="material-icons-outlined text-6xl text-neutral-600 mb-4 block">folder_open</span>
+                                <h3 className="text-xl font-semibold text-white mb-2">
+                                    {searchQuery ? 'Nenhum resultado encontrado' : 'Nenhum documento ainda'}
+                                </h3>
+                                <p className="text-neutral-400 mb-6">
+                                    {searchQuery ? 'Tente buscar por outro termo' : 'Faça upload do seu primeiro documento para começar'}
+                                </p>
+                                {!searchQuery && (
+                                    <button
+                                        onClick={handleUploadClick}
+                                        className="inline-flex items-center gap-2 bg-[#38ff81] text-black px-6 py-3 rounded-xl hover:bg-[#38ff81]/90 transition-colors font-semibold"
+                                    >
+                                        <span className="material-icons-outlined">upload_file</span>
+                                        <span>Upload Agora</span>
+                                    </button>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-neutral-800">
+                                {filteredAndSortedDocs.map((doc) => (
+                                    <div key={doc.id} className="p-6 hover:bg-neutral-800/50 transition-colors">
+                                        <div className="flex items-center justify-between">
+                                            {/* Ícone e Nome */}
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 bg-neutral-800 rounded-xl flex items-center justify-center">
+                                                    <span className="material-icons-outlined text-[#38ff81] text-2xl">
+                                                        {getTypeIcon(doc.type)}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <div className="font-semibold text-white text-lg">
+                                                        {doc.name}
+                                                    </div>
+                                                    <div className="text-sm text-neutral-400">
+                                                        {doc.type} • {doc.size}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Info e Ações */}
+                                            <div className="flex items-center gap-6">
+                                                <div className="text-right">
+                                                    <div className="text-sm text-neutral-400">Upload em</div>
+                                                    <div className="text-white font-medium">
+                                                        {new Date(doc.uploadDate).toLocaleDateString('pt-BR')}
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="flex items-center gap-2">
+                                                    {doc.transcription && (
+                                                        <button
+                                                            onClick={() => handleViewTranscription(doc)}
+                                                            className="p-2 rounded-lg hover:bg-neutral-700 transition-colors"
+                                                            title="Ver transcrição"
+                                                        >
+                                                            <span className="material-icons-outlined text-blue-400">description</span>
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        className="p-2 rounded-lg hover:bg-neutral-700 transition-colors"
+                                                        title="Baixar"
+                                                    >
+                                                        <span className="material-icons-outlined text-neutral-300">download</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(typeof doc.id === 'string' ? doc.id : doc.id)}
+                                                        className="p-2 rounded-lg hover:bg-red-900/20 transition-colors"
+                                                        title="Excluir"
+                                                    >
+                                                        <span className="material-icons-outlined text-red-400">delete</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* Sidebar de Transcrição */}
             {showTranscriptionSidebar && selectedDoc && (
-                <div className="w-1/3 bg-surface-light dark:bg-surface-dark border-l border-gray-200 dark:border-gray-700 p-6 flex flex-col h-full">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-title font-semibold text-on-surface-light dark:text-on-surface-dark">
+                <div className="fixed inset-y-0 right-0 w-1/3 bg-gradient-to-br from-neutral-900 to-black border-l border-neutral-800 p-6 flex flex-col h-full z-50">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-2xl font-bold text-white">
                             Transcrição do Documento
                         </h3>
                         <button
                             onClick={() => setShowTranscriptionSidebar(false)}
-                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                            className="p-2 rounded-lg hover:bg-neutral-800 transition-colors"
                         >
-                            <span className="material-icons-outlined">close</span>
+                            <span className="material-icons-outlined text-white">close</span>
                         </button>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 rounded-xl p-4 mb-4">
-                        <div className="space-y-4">
+                    <div className="flex-1 overflow-y-auto bg-neutral-950 rounded-xl p-6 mb-6">
+                        <div className="space-y-6">
                             <div>
-                                <div className="text-xs font-semibold text-on-surface-secondary-light dark:text-on-surface-secondary-dark mb-1">
+                                <div className="text-xs font-semibold text-neutral-400 mb-2 uppercase tracking-wider">
                                     Arquivo
                                 </div>
-                                <div className="text-body text-on-surface-light dark:text-on-surface-dark font-medium">
+                                <div className="text-white font-semibold text-lg">
                                     {selectedDoc.name}
                                 </div>
                             </div>
 
                             <div>
-                                <div className="text-xs font-semibold text-on-surface-secondary-light dark:text-on-surface-secondary-dark mb-1">
+                                <div className="text-xs font-semibold text-neutral-400 mb-3 uppercase tracking-wider">
                                     Transcrição
                                 </div>
-                                <div className="text-body text-on-surface-light dark:text-on-surface-dark whitespace-pre-wrap">
+                                <div className="text-neutral-300 whitespace-pre-wrap leading-relaxed">
                                     {transcriptionText}
                                 </div>
                             </div>
@@ -392,14 +436,14 @@ const DocumentsPage: React.FC = () => {
                         <div className="space-y-3">
                             <button
                                 onClick={() => handleApprove(selectedDoc)}
-                                className="w-full flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-xl hover:bg-primary/90 transition-colors font-semibold"
+                                className="w-full flex items-center justify-center gap-2 bg-[#38ff81] text-black px-6 py-4 rounded-xl hover:bg-[#38ff81]/90 transition-colors font-bold text-lg shadow-lg shadow-[#38ff81]/30"
                             >
                                 <span className="material-icons-outlined">check_circle</span>
                                 Aprovar e Salvar
                             </button>
                             <button
                                 onClick={handleReject}
-                                className="w-full flex items-center justify-center gap-2 bg-gray-200 dark:bg-gray-700 text-on-surface-light dark:text-on-surface-dark px-6 py-3 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-semibold"
+                                className="w-full flex items-center justify-center gap-2 bg-neutral-800 text-white px-6 py-4 rounded-xl hover:bg-neutral-700 transition-colors font-semibold"
                             >
                                 <span className="material-icons-outlined">cancel</span>
                                 Cancelar
@@ -407,6 +451,14 @@ const DocumentsPage: React.FC = () => {
                         </div>
                     )}
                 </div>
+            )}
+
+            {/* Overlay para Sidebar */}
+            {showTranscriptionSidebar && (
+                <div 
+                    className="fixed inset-0 bg-black/50 z-40"
+                    onClick={() => setShowTranscriptionSidebar(false)}
+                ></div>
             )}
 
             {/* Modal de Upload */}

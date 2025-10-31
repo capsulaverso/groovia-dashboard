@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { ChatMessage, AgentFunction } from '../types';
 import { MessageRenderer } from './messages';
+import { apiClient } from '../hooks/useApi';
+import { useUser } from '../hooks/useUser';
 
 interface WorkspaceChatAreaProps {
     agentTitle: string;
@@ -24,6 +26,10 @@ const WorkspaceChatArea: React.FC<WorkspaceChatAreaProps> = ({
     const [isTyping, setIsTyping] = useState(false);
     const [showFunctions, setShowFunctions] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const { user } = useUser();
+
+    // Extrair agentId do internalCode (ex: "AGT-DRE-005" → 5)
+    const agentId = parseInt(internalCode.split('-').pop() || '1');
 
     const handleApprovalAction = (requestId: string, optionId: string, optionValue: string) => {
         setMessages(prev => prev.map(msg => {
@@ -103,7 +109,7 @@ const WorkspaceChatArea: React.FC<WorkspaceChatAreaProps> = ({
         }
     }, [messages, activeConversationId]);
 
-    const handleSendMessage = () => {
+    const handleSendMessage = async () => {
         if (!inputMessage.trim()) return;
 
         const userText = inputMessage;
@@ -118,17 +124,35 @@ const WorkspaceChatArea: React.FC<WorkspaceChatAreaProps> = ({
         setInputMessage('');
         setIsTyping(true);
 
-        // Simula resposta do agente
-        setTimeout(() => {
+        try {
+            console.log('📤 Enviando mensagem para agente:', agentId);
+            const response = await apiClient.post(`/agents/${agentId}/respond`, {
+                conversationId: activeConversationId || undefined,
+                message: userText,
+            });
+
+            console.log('✅ Resposta recebida:', response);
+
             const agentMessage: ChatMessage = {
                 id: (Date.now() + 1).toString(),
                 sender: 'agent',
-                message: `Recebi sua mensagem: "${userText}". Processando usando **${agentType}**.\n\n*[${internalCode}]*`,
+                message: response.message?.content || response.n8nResponse?.text || 'Não consegui processar sua solicitação.',
                 timestamp: new Date()
             };
+
             setMessages(prev => [...prev, agentMessage]);
+        } catch (error) {
+            console.error('❌ Erro ao obter resposta:', error);
+            const errorMessage: ChatMessage = {
+                id: (Date.now() + 1).toString(),
+                sender: 'agent',
+                message: 'Desculpe, houve um erro ao processar sua mensagem. Por favor, tente novamente.',
+                timestamp: new Date()
+            };
+            setMessages(prev => [...prev, errorMessage]);
+        } finally {
             setIsTyping(false);
-        }, 1500);
+        }
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {

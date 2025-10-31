@@ -1,4 +1,5 @@
 // Serviço para comunicação com N8N
+import { OutputBlock, TextBlock, LoadingBlock } from '../shared/outputBlocks.js';
 
 interface N8NPayload {
   message: string;
@@ -14,6 +15,7 @@ interface N8NPayload {
 interface N8NResponse {
   success: boolean;
   response?: string;
+  blocks?: OutputBlock[];
   error?: string;
   metadata?: any;
 }
@@ -48,9 +50,22 @@ export class N8NService {
       console.log('✅ Resposta do N8N:', data);
 
       // A resposta do N8N pode vir em diferentes formatos
+      const blocks = this.extractBlocks(data);
+      const text = this.extractResponse(data, blocks);
+
+      // Se text é null, N8N não retornou resposta válida
+      if (text === null) {
+        console.log('⚠️ N8N retornou resposta inválida, marcando como falha');
+        return {
+          success: false,
+          error: 'N8N retornou resposta inválida ou workflow assíncrono',
+        };
+      }
+
       return {
         success: true,
-        response: this.extractResponse(data),
+        response: text,
+        blocks,
         metadata: data,
       };
     } catch (error) {
@@ -65,8 +80,14 @@ export class N8NService {
   /**
    * Extrai a resposta de diferentes formatos possíveis do N8N
    */
-  private extractResponse(data: any): string {
+  private extractResponse(data: any, preParsedBlocks?: OutputBlock[]): string {
     console.log('🔍 Extraindo resposta do N8N:', data);
+
+    // Se já houver blocks, gerar um texto de fallback simples
+    if (preParsedBlocks && preParsedBlocks.length > 0) {
+      const maybeText = (preParsedBlocks.find(b => b.type === 'text') as TextBlock | undefined)?.text;
+      if (maybeText) return maybeText;
+    }
 
     // Caso 1: Resposta direta em "response"
     if (data.response) {
@@ -74,16 +95,23 @@ export class N8NService {
       return String(data.response);
     }
 
-    // Caso 2: "Workflow was started" indica execução assíncrona
+    // Caso 2: "Workflow was started" indica execução assíncrona - FALHA, USAR FALLBACK
     if (data.message === 'Workflow was started') {
-      console.log('⚡ Workflow iniciado, retornando mensagem de processamento');
-      return 'Recebi sua mensagem e estou processando. Aguarde um momento para minha resposta completa.';
+      console.log('⚠️ N8N retornou "Workflow was started" - NÃO É UMA RESPOSTA VÁLIDA');
+      // Retorna null para indicar que precisa usar fallback
+      return null;
     }
 
     // Caso 3: Mensagem de resposta direta
-    if (data.message && data.message !== 'Workflow was started') {
+    if (data.message && data.message !== 'Workflow was started' && data.message.trim().length > 10) {
       console.log('✅ Resposta encontrada em data.message:', data.message);
       return String(data.message);
+    }
+
+    // Caso 3.5: Mensagem genérica curta demais
+    if (data.message && data.message.length <= 10) {
+      console.log('⚠️ Mensagem muito curta, pode ser erro:', data.message);
+      return null;
     }
 
     // Caso 4: Resposta em array (n8n retorna workflows executados)
@@ -117,6 +145,50 @@ export class N8NService {
   }
 
   /**
+   * Tenta extrair OutputBlocks padronizados de uma resposta do N8N
+   */
+  private extractBlocks(data: any): OutputBlock[] | undefined {
+    try {
+      // Caso padrão: objeto com campo blocks já pronto
+      if (data && Array.isArray(data.blocks)) {
+        return data.blocks as OutputBlock[];
+      }
+
+      // Caso: mensagem de workflow assíncrono
+      if (data && data.message === 'Workflow was started') {
+        const block: LoadingBlock = { type: 'loading', message: 'Processando com orquestração. Aguarde...' };
+        return [block];
+      }
+
+      // Caso: resposta simples em string -> converte para bloco de texto
+      if (typeof data === 'string') {
+        const block: TextBlock = { type: 'text', text: data };
+        return [block];
+      }
+
+      // Caso: estrutura comum do N8N
+      if (data && (data.response || data.message)) {
+        const text = String(data.response || data.message);
+        const block: TextBlock = { type: 'text', text };
+        return [block];
+      }
+
+      // Caso: array de execuções
+      if (Array.isArray(data) && data.length > 0) {
+        const last = data[data.length - 1];
+        if (last && (last.response || last.message)) {
+          const text = String(last.response || last.message);
+          const block: TextBlock = { type: 'text', text };
+          return [block];
+        }
+      }
+    } catch (err) {
+      console.warn('⚠️ Falha ao extrair blocks do N8N:', err);
+    }
+    return undefined;
+  }
+
+  /**
    * Processa mensagem do usuário através do N8N
    */
   async processMessage(params: {
@@ -126,7 +198,7 @@ export class N8NService {
     userId?: number;
     agentId?: number;
     conversationId?: number;
-  }): Promise<string> {
+  }): Promise<{ text: string; blocks?: OutputBlock[]; raw?: any }> {
     const payload: N8NPayload = {
       message: params.message,
       agentName: params.agentName,
@@ -139,11 +211,16 @@ export class N8NService {
 
     const result = await this.sendToWebhook(payload);
 
-    if (!result.success) {
-      throw new Error(result.error || 'Erro ao processar mensagem no N8N');
+    if (!result.success || !result.response) {
+      console.log('❌ N8N falhou ou retornou resposta inválida, deve usar fallback');
+      throw new Error(result.error || 'N8N retornou resposta inválida');
     }
 
-    return result.response || 'Não foi possível obter resposta do N8N';
+    return {
+      text: result.response,
+      blocks: result.blocks,
+      raw: result.metadata,
+    };
   }
 }
 

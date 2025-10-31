@@ -115,6 +115,7 @@ export interface ChatModalProps {
     aiProvider?: string;
     aiModel?: string;
     systemPrompt?: string;
+    fallbackPrompt?: string;
 }
 
 // Novas interfaces para AgentWorkspace (página dedicada)

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import AgentConfigModal from './AgentConfigModal';
+import AgentBuilderModal from './AgentBuilderModal';
 import type { AgentConfiguration } from '../types';
 
 const AdminDashboard: React.FC = () => {
@@ -57,6 +58,7 @@ const AdminDashboard: React.FC = () => {
     ]);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isBuilderOpen, setIsBuilderOpen] = useState(false);
     const [editingAgent, setEditingAgent] = useState<AgentConfiguration | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'disabled'>('all');
@@ -69,6 +71,11 @@ const AdminDashboard: React.FC = () => {
     const handleEditAgent = (agent: AgentConfiguration) => {
         setEditingAgent(agent);
         setIsModalOpen(true);
+    };
+
+    const handleOpenBuilder = (agent: AgentConfiguration) => {
+        setEditingAgent(agent);
+        setIsBuilderOpen(true);
     };
 
     const handleSaveAgent = (agent: AgentConfiguration) => {
@@ -86,6 +93,13 @@ const AdminDashboard: React.FC = () => {
             setAgents([...agents, newAgent]);
         }
         setIsModalOpen(false);
+    };
+
+    const handleSaveBuilder = (agentData: any) => {
+        if (editingAgent) {
+            setAgents(agents.map(a => a.id === agentData.id ? { ...agentData, updatedAt: new Date() } : a));
+        }
+        setIsBuilderOpen(false);
     };
 
     const handleToggleStatus = (agentId: string) => {
@@ -286,6 +300,13 @@ const AdminDashboard: React.FC = () => {
                                 {/* Actions */}
                                 <div className="flex items-center gap-2 ml-4">
                                     <button
+                                        onClick={() => handleOpenBuilder(agent)}
+                                        className="p-2 bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors text-primary"
+                                        title="Agent Builder (Skills & Workflow)"
+                                    >
+                                        <span className="material-icons-outlined">extension</span>
+                                    </button>
+                                    <button
                                         onClick={() => handleToggleStatus(agent.id)}
                                         className={`p-2 rounded-lg transition-colors ${
                                             agent.status === 'active'
@@ -319,12 +340,20 @@ const AdminDashboard: React.FC = () => {
                 )}
             </div>
 
-            {/* Modal */}
+            {/* Modals */}
             {isModalOpen && (
                 <AgentConfigModal
                     agent={editingAgent}
                     onSave={handleSaveAgent}
                     onClose={() => setIsModalOpen(false)}
+                />
+            )}
+
+            {isBuilderOpen && (
+                <AgentBuilderModal
+                    agent={editingAgent}
+                    onSave={handleSaveBuilder}
+                    onClose={() => setIsBuilderOpen(false)}
                 />
             )}
         </div>

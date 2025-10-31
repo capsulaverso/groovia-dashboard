@@ -69,7 +69,16 @@ export const apiClient = {
       body: JSON.stringify(data),
     });
     if (!response.ok) {
-      throw new Error(`Erro: ${response.statusText}`);
+      let errorMessage = `Erro: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorData.message || errorMessage;
+      } catch {
+        // Se não conseguir parsear JSON, usa a mensagem padrão
+      }
+      const error: any = new Error(errorMessage);
+      error.response = { error: errorMessage, status: response.status };
+      throw error;
     }
     return response.json();
   },

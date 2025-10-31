@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { apiClient } from './useApi';
 
 export type UserRole = 'user' | 'admin';
 
@@ -69,12 +70,29 @@ export const useUser = (): UseUserReturn => {
         localStorage.removeItem(USER_STORAGE_KEY);
     };
 
-    const updateUser = (userData: Partial<User>) => {
+    const updateUser = async (userData: Partial<User>) => {
         if (!user) return;
         
-        const updatedUser = { ...user, ...userData };
-        setUser(updatedUser);
-        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
+        try {
+            // Atualizar no backend
+            const clientId = user.clientId || 1;
+            const updatedUser = await apiClient.put<User>(
+                `/users/${user.id}?clientId=${clientId}`,
+                userData
+            );
+            
+            // Atualizar estado local
+            setUser(updatedUser);
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
+            
+            console.log('✅ Perfil atualizado com sucesso');
+        } catch (error) {
+            console.error('❌ Erro ao atualizar perfil:', error);
+            // Em caso de erro, atualizar localStorage mesmo assim
+            const updatedUser = { ...user, ...userData };
+            setUser(updatedUser);
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
+        }
     };
 
     return {

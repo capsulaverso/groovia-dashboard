@@ -154,7 +154,17 @@ app.post('/api/auth/login', async (req, res) => {
     }
     
     const { password: _, ...userWithoutPassword } = user;
-    res.json(userWithoutPassword);
+    
+    // Retornar dados do usuário sem senha e com campos corretos
+    res.json({
+      id: userWithoutPassword.id,
+      name: userWithoutPassword.name,
+      email: userWithoutPassword.email,
+      role: userWithoutPassword.role,
+      avatar: userWithoutPassword.avatar || null,
+      createdAt: userWithoutPassword.createdAt?.toISOString() || new Date().toISOString(),
+      clientId: userWithoutPassword.clientId || 1,
+    });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao fazer login' });
   }
@@ -1354,6 +1364,248 @@ app.post('/api/gpt/generate-prompts', async (req, res) => {
       success: false, 
       error: message 
     });
+  }
+});
+
+// =============================================
+// 📄 Pages Management Endpoints (Editor Visual)
+// =============================================
+
+// Listar páginas (admin apenas)
+app.get('/api/pages', async (req, res) => {
+  try {
+    const userId = parseInt(req.headers['x-user-id'] as string) || parseInt(req.query.userId as string);
+    const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string) || 1;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
+
+    const user = await storage.getUser(userId);
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ error: 'Acesso negado. Apenas administradores.' });
+    }
+
+    const pagesList = await storage.getPages(clientId);
+    
+    // Buscar informações de versões publicadas
+    const pagesWithVersions = await Promise.all(
+      pagesList.map(async (page) => {
+        const publishedVersion = await storage.getLatestPageVersion(page.id, clientId, 'published');
+        return {
+          id: page.id,
+          name: page.name,
+          pageKey: page.pageKey,
+          description: page.description,
+          publishedVersion: publishedVersion?.version || null,
+          publishedAt: publishedVersion?.publishedAt?.toISOString() || null,
+          updatedAt: page.updatedAt?.toISOString() || null,
+        };
+      })
+    );
+
+    res.json({ pages: pagesWithVersions });
+  } catch (error) {
+    console.error('Erro ao listar páginas:', error);
+    res.status(500).json({ error: 'Erro ao listar páginas' });
+  }
+});
+
+// Buscar página por pageKey (admin ou público se publicado)
+app.get('/api/pages/:pageKey', async (req, res) => {
+  try {
+    const { pageKey } = req.params;
+    const userId = parseInt(req.headers['x-user-id'] as string) || parseInt(req.query.userId as string);
+    const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string) || 1;
+    const status = req.query.status as 'published' | 'draft' | undefined;
+
+    const page = await storage.getPage(pageKey, clientId);
+    if (!page) {
+      return res.status(404).json({ error: 'Página não encontrada' });
+    }
+
+    // Se solicitando versão publicada, não precisa ser admin
+    const isPublic = status === 'published';
+    
+    if (!isPublic) {
+      if (!userId) {
+        return res.status(401).json({ error: 'Usuário não autenticado' });
+      }
+      const user = await storage.getUser(userId);
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ error: 'Acesso negado. Apenas administradores.' });
+      }
+    }
+
+    const versions = await storage.getPageVersions(page.id, clientId);
+    const latestVersion = await storage.getLatestPageVersion(
+      page.id,
+      clientId,
+      status || (isPublic ? 'published' : undefined)
+    );
+
+    res.json({
+      page: {
+        id: page.id,
+        name: page.name,
+        pageKey: page.pageKey,
+        description: page.description,
+        publishedVersionId: page.publishedVersionId,
+        createdAt: page.createdAt?.toISOString(),
+        updatedAt: page.updatedAt?.toISOString(),
+      },
+      latestVersion: latestVersion ? {
+        id: latestVersion.id,
+        version: latestVersion.version,
+        status: latestVersion.status,
+        note: latestVersion.note,
+        content: latestVersion.content,
+        html: latestVersion.html,
+        css: latestVersion.css,
+        createdAt: latestVersion.createdAt?.toISOString(),
+        publishedAt: latestVersion.publishedAt?.toISOString(),
+      } : null,
+      versions: versions.map(v => ({
+        id: v.id,
+        version: v.version,
+        status: v.status,
+        note: v.note,
+        createdAt: v.createdAt?.toISOString(),
+        publishedAt: v.publishedAt?.toISOString(),
+      })),
+    });
+  } catch (error) {
+    console.error('Erro ao buscar página:', error);
+    res.status(500).json({ error: 'Erro ao buscar página' });
+  }
+});
+
+// Criar nova página (admin apenas)
+app.post('/api/pages', async (req, res) => {
+  try {
+    const userId = parseInt(req.headers['x-user-id'] as string) || parseInt(req.query.userId as string);
+    const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string) || 1;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
+
+    const user = await storage.getUser(userId);
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ error: 'Acesso negado. Apenas administradores.' });
+    }
+
+    const { name, pageKey, description } = req.body;
+
+    if (!name || !pageKey) {
+      return res.status(400).json({ error: 'name e pageKey são obrigatórios' });
+    }
+
+    // Validar slug (apenas letras, números e hífens)
+    if (!/^[a-z0-9-]+$/.test(pageKey)) {
+      return res.status(400).json({ error: 'pageKey inválido. Use apenas letras minúsculas, números e hífens.' });
+    }
+
+    // Verificar se já existe
+    const existing = await storage.getPage(pageKey, clientId);
+    if (existing) {
+      return res.status(409).json({ error: 'Já existe uma página com este pageKey' });
+    }
+
+    const page = await storage.createPage({
+      clientId,
+      pageKey,
+      name,
+      description,
+      createdBy: userId,
+      updatedBy: userId,
+    });
+
+    res.status(201).json({
+      pages: [{
+        id: page.id,
+        name: page.name,
+        pageKey: page.pageKey,
+        description: page.description,
+        publishedVersion: null,
+        publishedAt: null,
+        updatedAt: page.updatedAt?.toISOString() || null,
+      }],
+    });
+  } catch (error) {
+    console.error('Erro ao criar página:', error);
+    const message = error instanceof Error ? error.message : 'Erro ao criar página';
+    res.status(500).json({ error: message });
+  }
+});
+
+// Salvar versão de página (admin apenas)
+app.post('/api/pages/:pageKey', async (req, res) => {
+  try {
+    const { pageKey } = req.params;
+    const userId = parseInt(req.headers['x-user-id'] as string) || parseInt(req.query.userId as string);
+    const clientId = parseInt(req.query.clientId as string) || parseInt(req.headers['x-client-id'] as string) || 1;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
+
+    const user = await storage.getUser(userId);
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ error: 'Acesso negado. Apenas administradores.' });
+    }
+
+    const page = await storage.getPage(pageKey, clientId);
+    if (!page) {
+      return res.status(404).json({ error: 'Página não encontrada' });
+    }
+
+    const { status, note, content, html, css } = req.body;
+
+    if (status !== 'draft' && status !== 'published') {
+      return res.status(400).json({ error: 'status deve ser "draft" ou "published"' });
+    }
+
+    const version = await storage.createPageVersion({
+      pageId: page.id,
+      clientId,
+      userId,
+      status,
+      note,
+      content,
+      html,
+      css,
+    });
+
+    // Atualizar updatedBy na página
+    await storage.updatePage(page.id, clientId, { updatedBy: userId });
+
+    // Buscar versões atualizadas
+    const versions = await storage.getPageVersions(page.id, clientId);
+
+    res.json({
+      page: {
+        id: page.id,
+        name: page.name,
+        pageKey: page.pageKey,
+        description: page.description,
+        publishedVersionId: page.publishedVersionId,
+        createdAt: page.createdAt?.toISOString(),
+        updatedAt: page.updatedAt?.toISOString(),
+      },
+      versions: versions.map(v => ({
+        id: v.id,
+        version: v.version,
+        status: v.status,
+        note: v.note,
+        createdAt: v.createdAt?.toISOString(),
+        publishedAt: v.publishedAt?.toISOString(),
+      })),
+    });
+  } catch (error) {
+    console.error('Erro ao salvar versão:', error);
+    const message = error instanceof Error ? error.message : 'Erro ao salvar versão';
+    res.status(500).json({ error: message });
   }
 });
 

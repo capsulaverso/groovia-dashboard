@@ -1,5 +1,5 @@
 import { 
-  clients, users, agents, documents, conversations, messages, userProgress, integrations, agentConversations, agentMessages,
+  clients, users, agents, documents, conversations, messages, userProgress, integrations, agentConversations, agentMessages, pages, pageVersions,
   type Client, type InsertClient,
   type User, type InsertUser,
   type Agent, type InsertAgent,
@@ -9,7 +9,9 @@ import {
   type UserProgress, type InsertUserProgress,
   type Integration, type InsertIntegration,
   type AgentConversation, type InsertAgentConversation,
-  type AgentMessage, type InsertAgentMessage
+  type AgentMessage, type InsertAgentMessage,
+  type Page, type InsertPage,
+  type PageVersion, type InsertPageVersion
 } from '../shared/schema.js';
 import { pool, db } from './db.js';
 import { eq, desc, and, inArray } from 'drizzle-orm';
@@ -76,6 +78,20 @@ export interface IStorage {
   getUserProgress(userId: number, clientId: number): Promise<UserProgress[]>;
   getUserAgentProgress(userId: number, agentId: number, clientId: number): Promise<UserProgress | undefined>;
   updateUserProgress(userId: number, agentId: number, clientId: number, data: Partial<InsertUserProgress>): Promise<UserProgress>;
+  
+  // Pages (clientId REQUIRED for multi-tenancy)
+  getPages(clientId: number): Promise<Page[]>;
+  getPage(pageKey: string, clientId: number): Promise<Page | undefined>;
+  createPage(insertPage: InsertPage): Promise<Page>;
+  updatePage(id: number, clientId: number, data: Partial<InsertPage>): Promise<Page | undefined>;
+  deletePage(id: number, clientId: number): Promise<void>;
+  
+  // Page Versions
+  getPageVersions(pageId: number, clientId: number, status?: 'draft' | 'published'): Promise<PageVersion[]>;
+  getLatestPageVersion(pageId: number, clientId: number, status?: 'draft' | 'published'): Promise<PageVersion | undefined>;
+  getPageVersion(id: number, clientId: number): Promise<PageVersion | undefined>;
+  createPageVersion(insertPageVersion: InsertPageVersion): Promise<PageVersion>;
+  setPagePublishedVersion(pageId: number, clientId: number, publishedVersionId: number): Promise<void>;
 }
 
 // Implementação do armazenamento em banco de dados
@@ -596,6 +612,101 @@ export class DatabaseStorage implements IStorage {
       .values(insertAgentMessage)
       .returning();
     return message;
+  }
+
+  // Pages
+  async getPages(clientId: number): Promise<Page[]> {
+    return await db
+      .select()
+      .from(pages)
+      .where(eq(pages.clientId, clientId))
+      .orderBy(desc(pages.updatedAt));
+  }
+
+  async getPage(pageKey: string, clientId: number): Promise<Page | undefined> {
+    const [page] = await db
+      .select()
+      .from(pages)
+      .where(and(eq(pages.pageKey, pageKey), eq(pages.clientId, clientId)));
+    return page || undefined;
+  }
+
+  async createPage(insertPage: InsertPage): Promise<Page> {
+    const [page] = await db
+      .insert(pages)
+      .values(insertPage)
+      .returning();
+    return page;
+  }
+
+  async updatePage(id: number, clientId: number, data: Partial<InsertPage>): Promise<Page | undefined> {
+    const [page] = await db
+      .update(pages)
+      .set({ ...data, updatedAt: new Date() })
+      .where(and(eq(pages.id, id), eq(pages.clientId, clientId)))
+      .returning();
+    return page || undefined;
+  }
+
+  async deletePage(id: number, clientId: number): Promise<void> {
+    await db
+      .delete(pages)
+      .where(and(eq(pages.id, id), eq(pages.clientId, clientId)));
+  }
+
+  async setPagePublishedVersion(pageId: number, clientId: number, publishedVersionId: number): Promise<void> {
+    await db
+      .update(pages)
+      .set({ publishedVersionId, updatedAt: new Date() })
+      .where(and(eq(pages.id, pageId), eq(pages.clientId, clientId)));
+  }
+
+  // Page Versions
+  async getPageVersions(pageId: number, clientId: number, status?: 'draft' | 'published'): Promise<PageVersion[]> {
+    const conditions = [eq(pageVersions.pageId, pageId), eq(pageVersions.clientId, clientId)];
+    if (status) {
+      conditions.push(eq(pageVersions.status, status));
+    }
+    return await db
+      .select()
+      .from(pageVersions)
+      .where(and(...conditions))
+      .orderBy(desc(pageVersions.version));
+  }
+
+  async getLatestPageVersion(pageId: number, clientId: number, status?: 'draft' | 'published'): Promise<PageVersion | undefined> {
+    const versions = await this.getPageVersions(pageId, clientId, status);
+    return versions[0] || undefined;
+  }
+
+  async getPageVersion(id: number, clientId: number): Promise<PageVersion | undefined> {
+    const [version] = await db
+      .select()
+      .from(pageVersions)
+      .where(and(eq(pageVersions.id, id), eq(pageVersions.clientId, clientId)));
+    return version || undefined;
+  }
+
+  async createPageVersion(insertPageVersion: InsertPageVersion): Promise<PageVersion> {
+    // Calcular próxima versão
+    const existingVersions = await this.getPageVersions(insertPageVersion.pageId, insertPageVersion.clientId);
+    const nextVersion = existingVersions.length > 0 ? Math.max(...existingVersions.map(v => v.version)) + 1 : 1;
+    
+    const [version] = await db
+      .insert(pageVersions)
+      .values({
+        ...insertPageVersion,
+        version: nextVersion,
+        publishedAt: insertPageVersion.status === 'published' ? new Date() : null,
+      })
+      .returning();
+    
+    // Se foi publicado, atualizar página
+    if (insertPageVersion.status === 'published') {
+      await this.setPagePublishedVersion(insertPageVersion.pageId, insertPageVersion.clientId, version.id);
+    }
+    
+    return version;
   }
 }
 

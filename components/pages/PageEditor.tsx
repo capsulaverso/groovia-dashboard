@@ -1,10 +1,44 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Editor as GrapesEditor, ProjectData } from 'grapesjs';
 import 'grapesjs/dist/css/grapes.min.css';
 import { apiClient } from '../../hooks/useApi';
 import { useUser } from '../../hooks/useUser';
-import type { PageResponsePayload, PageVersionSummary, PageSummary } from '../../types/pageBuilder';
+
+// Tipos para o Page Builder
+interface PageSummary {
+    id: number;
+    name: string;
+    pageKey: string;
+    description?: string | null;
+    publishedVersionId?: number | null;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+interface PageVersionSummary {
+    id: number;
+    version: number;
+    status: 'draft' | 'published';
+    note?: string | null;
+    createdAt: string;
+    publishedAt?: string | null;
+}
+
+interface PageResponsePayload {
+    page: PageSummary | null;
+    latestVersion: {
+        id: number;
+        version: number;
+        status: 'draft' | 'published';
+        note?: string | null;
+        content?: any;
+        html?: string;
+        css?: string;
+        createdAt: string;
+        publishedAt?: string | null;
+    } | null;
+    versions: PageVersionSummary[];
+}
 
 type SaveStatus = 'idle' | 'saving' | 'publishing';
 
@@ -28,11 +62,12 @@ const PageEditor: React.FC = () => {
     const [versions, setVersions] = useState<PageVersionSummary[]>([]);
     const [pageSummary, setPageSummary] = useState<PageSummary | null>(null);
     const [note, setNote] = useState('');
-    const [searchParams] = useSearchParams();
-    const navigate = useNavigate();
     const { user, isAdmin } = useUser();
 
-    const pageKey = useMemo(() => searchParams.get('page') || 'home', [searchParams]);
+    const pageKey = useMemo(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('page') || 'home';
+    }, []);
 
     const ensureEditor = useCallback(async (): Promise<GrapesEditor | null> => {
         if (editorRef.current) {
@@ -229,8 +264,8 @@ const PageEditor: React.FC = () => {
     }, [buildPayload, hydrateEditor, isAdmin, pageKey, user?.id]);
 
     const handleCancel = useCallback(() => {
-        navigate('/', { replace: true });
-    }, [navigate]);
+        window.location.href = '/';
+    }, []);
 
     const isSaving = status === 'saving' || status === 'publishing';
 
@@ -245,7 +280,7 @@ const PageEditor: React.FC = () => {
                     </p>
                     <button
                         type="button"
-                        onClick={() => navigate('/', { replace: true })}
+                        onClick={() => window.location.href = '/'}
                         className="rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-[#02281a] transition hover:bg-primary/80"
                     >
                         Voltar ao dashboard

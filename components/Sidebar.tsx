@@ -113,6 +113,44 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
                             onClick={() => onNavigate('home')}
                         />
                         <MenuItem
+                            icon="chat_bubble_outline"
+                            label="Chat"
+                            isActive={activeView === 'chat'}
+                            onClick={() => onNavigate('chat')}
+                        />
+                        <MenuItem
+                            icon="history"
+                            label="Decisões"
+                            isActive={activeView === 'decisions'}
+                            onClick={() => onNavigate('decisions')}
+                        />
+                        <MenuItem
+                            icon="calendar_today"
+                            label="Calendário"
+                            isActive={activeView === 'calendar'}
+                            onClick={() => onNavigate('calendar')}
+                        />
+                    </MenuSection>
+
+                    {/* Laboratório */}
+                    <MenuSection title="Laboratório" isCollapsible defaultCollapsed={false}>
+                        <MenuItem
+                            icon="science"
+                            label="Lab de Agentes"
+                            isActive={activeView === 'agent-laboratory'}
+                            onClick={() => onNavigate('agent-laboratory')}
+                        />
+                        <MenuItem
+                            icon="verified_user"
+                            label="Inspetor Estratégico"
+                            isActive={activeView === 'inspector'}
+                            onClick={() => onNavigate('inspector')}
+                        />
+                    </MenuSection>
+
+                    {/* Organização */}
+                    <MenuSection title="Organização">
+                        <MenuItem
                             icon="business"
                             label="Empresa"
                             isActive={activeView === 'company'}
@@ -149,6 +187,36 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
                             onClick={() => onNavigate('support')}
                         />
                     </MenuSection>
+
+                    {/* Administração */}
+                    {isAdmin && (
+                        <MenuSection title="Administração">
+                            <MenuItem
+                                icon="admin_panel_settings"
+                                label="Painel Admin"
+                                isActive={activeView === 'admin'}
+                                onClick={() => onNavigate('admin')}
+                            />
+                            <MenuItem
+                                icon="edit"
+                                label="Editor de Páginas"
+                                isActive={activeView === 'pages-admin'}
+                                onClick={() => onNavigate('pages-admin')}
+                            />
+                            <MenuItem
+                                icon="settings"
+                                label="Usuários"
+                                isActive={activeView === 'users'}
+                                onClick={() => onNavigate('users')}
+                            />
+                            <MenuItem
+                                icon="assessment"
+                                label="Relatórios"
+                                isActive={activeView === 'reports'}
+                                onClick={() => onNavigate('reports')}
+                            />
+                        </MenuSection>
+                    )}
 
                 </nav>
             </div>

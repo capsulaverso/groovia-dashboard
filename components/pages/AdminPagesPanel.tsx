@@ -1,8 +1,46 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../hooks/useApi';
 import { useUser } from '../../hooks/useUser';
-import type { PageListItem, PageListResponse, PageResponsePayload, PageVersionSummary } from '../../types/pageBuilder';
+
+// Tipos para o Page Builder
+interface PageListItem {
+    id: number;
+    name: string;
+    pageKey: string;
+    description?: string | null;
+    publishedVersion?: number | null;
+    publishedAt?: string | null;
+    updatedAt?: string | null;
+}
+
+interface PageListResponse {
+    pages: PageListItem[];
+}
+
+interface PageVersionSummary {
+    id: number;
+    version: number;
+    status: 'draft' | 'published';
+    note?: string | null;
+    createdAt: string;
+    publishedAt?: string | null;
+}
+
+interface PageResponsePayload {
+    page: PageListItem | null;
+    latestVersion: {
+        id: number;
+        version: number;
+        status: 'draft' | 'published';
+        note?: string | null;
+        content?: any;
+        html?: string;
+        css?: string;
+        createdAt: string;
+        publishedAt?: string | null;
+    } | null;
+    versions: PageVersionSummary[];
+}
 
 interface VersionsCache {
     [pageKey: string]: PageVersionSummary[];
@@ -18,7 +56,6 @@ const slugify = (value: string): string =>
         .replace(/-+/g, '-');
 
 const AdminPagesPanel: React.FC = () => {
-    const navigate = useNavigate();
     const { user, isAdmin } = useUser();
     const [pages, setPages] = useState<PageListItem[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
@@ -90,7 +127,7 @@ const AdminPagesPanel: React.FC = () => {
             await apiClient.post<PageListResponse>('/pages', payload);
             setShowModal(false);
             await fetchPages();
-            navigate(`/editor?page=${normalizedSlug}`);
+            window.location.href = `/?page=${normalizedSlug}`;
         } catch (err) {
             console.error('Erro ao criar página:', err);
             setError('Não foi possível criar a nova página. Verifique os dados e tente novamente.');
@@ -100,7 +137,7 @@ const AdminPagesPanel: React.FC = () => {
     };
 
     const handleEdit = (slug: string) => {
-        navigate(`/editor?page=${slug}`);
+        window.location.href = `/?page=${slug}`;
     };
 
     const handleToggleVersions = async (slug: string) => {
@@ -135,7 +172,7 @@ const AdminPagesPanel: React.FC = () => {
                     </p>
                     <button
                         type="button"
-                        onClick={() => navigate('/')}
+                        onClick={() => window.location.href = '/'}
                         className="rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-[#02281a] transition hover:bg-primary/80"
                     >
                         Voltar ao dashboard

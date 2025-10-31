@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApi, apiClient } from '../../hooks/useApi';
 import ChatModal from '../ChatModal';
+import AgentBuilderModal from '../AgentBuilderModal';
 
 interface Integration {
   id: string;
@@ -27,6 +28,10 @@ interface Agent {
   canCommunicateWithAgents: boolean;
   allowedAgentIds: number[];
   capabilities: string[];
+  skillsConfig?: any;
+  workflowConfig?: any;
+  contextConfig?: any;
+  uiConfig?: any;
 }
 
 interface TestResult {
@@ -45,6 +50,8 @@ const AgentsControlPage: React.FC = () => {
   const { data: agents, loading, refetch } = useApi<Agent[]>('/agents');
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showBuilderModal, setShowBuilderModal] = useState(false);
+  const [builderAgent, setBuilderAgent] = useState<Agent | null>(null);
   const [testingAgent, setTestingAgent] = useState<number | null>(null);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [testMessage, setTestMessage] = useState('Olá! Por favor, me explique brevemente o que você faz.');
@@ -53,6 +60,11 @@ const AgentsControlPage: React.FC = () => {
   const handleEdit = (agent: Agent) => {
     setEditingAgent({ ...agent });
     setShowModal(true);
+  };
+
+  const handleOpenBuilder = (agent: Agent) => {
+    setBuilderAgent(agent);
+    setShowBuilderModal(true);
   };
 
   const handleCreate = () => {
@@ -98,6 +110,52 @@ const AgentsControlPage: React.FC = () => {
     } catch (error) {
       console.error('[handleSave] Erro ao salvar:', error);
       alert(`Erro ao salvar agente: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    }
+  };
+
+  const handleSaveBuilder = async (agentData: any) => {
+    if (!builderAgent) return;
+
+    try {
+      console.log('[handleSaveBuilder] Salvando configuração do builder:', agentData);
+      
+      // Enviar apenas os campos novos do Agent Builder + campos básicos necessários
+      const payload: any = {
+        title: builderAgent.title,
+        description: builderAgent.description,
+        agentType: builderAgent.agentType || 'Agente de Análise',
+        internalCode: builderAgent.internalCode,
+        isActive: builderAgent.isActive,
+        behaviorType: builderAgent.behaviorType || 'autonomous',
+        capabilities: builderAgent.capabilities || {},
+        integrations: builderAgent.integrations || [],
+        aiModel: builderAgent.aiModel || 'gpt-4o-mini',
+        aiProvider: builderAgent.aiProvider || 'replit',
+        systemPrompt: builderAgent.systemPrompt || 'Você é um assistente inteligente e prestativo.',
+        fallbackPrompt: builderAgent.fallbackPrompt || 'Desculpe, houve um erro ao processar sua solicitação.',
+        webhookUrl: builderAgent.webhookUrl || '',
+        webhookEnabled: builderAgent.webhookEnabled || false,
+        canCommunicateWithAgents: builderAgent.canCommunicateWithAgents || false,
+        allowedAgentIds: builderAgent.allowedAgentIds || [],
+      };
+      
+      // Adicionar campos do Agent Builder se existirem
+      if (agentData.skillsConfig) payload.skillsConfig = agentData.skillsConfig;
+      if (agentData.workflowConfig) payload.workflowConfig = agentData.workflowConfig;
+      if (agentData.contextConfig) payload.contextConfig = agentData.contextConfig;
+      if (agentData.uiConfig) payload.uiConfig = agentData.uiConfig;
+      
+      console.log('[handleSaveBuilder] Payload enviado:', payload);
+      
+      const result = await apiClient.put(`/agents/${builderAgent.id}`, payload);
+      console.log('[handleSaveBuilder] Agente atualizado:', result);
+      
+      refetch();
+      setShowBuilderModal(false);
+      setBuilderAgent(null);
+    } catch (error) {
+      console.error('[handleSaveBuilder] Erro ao salvar:', error);
+      alert(`Erro ao salvar configuração: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   };
 
@@ -212,6 +270,11 @@ const AgentsControlPage: React.FC = () => {
                       💬 Comunica com {agent.allowedAgentIds.length} agente(s)
                     </span>
                   )}
+                  {agent.skillsConfig && (agent.skillsConfig as any).skills && (agent.skillsConfig as any).skills.length > 0 && (
+                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400">
+                      ⚡ {(agent.skillsConfig as any).skills.filter((s: any) => s.enabled).length} Skills Ativas
+                    </span>
+                  )}
                 </div>
                 <p className="text-gray-600 dark:text-gray-400 mb-3">{agent.description}</p>
                 <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-500">
@@ -226,7 +289,7 @@ const AgentsControlPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={() => setChatOpenAgent(agent)}
                   className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors flex items-center gap-2"
@@ -234,6 +297,14 @@ const AgentsControlPage: React.FC = () => {
                 >
                   <span className="material-icons-outlined text-lg">chat</span>
                   Chat
+                </button>
+                <button
+                  onClick={() => handleOpenBuilder(agent)}
+                  className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center gap-2"
+                  title="Agent Builder (Skills & Workflow)"
+                >
+                  <span className="material-icons-outlined text-lg">extension</span>
+                  Builder
                 </button>
                 <button
                   onClick={() => handleTest(agent)}
@@ -265,14 +336,18 @@ const AgentsControlPage: React.FC = () => {
                 </button>
                 <button
                   onClick={() => handleEdit(agent)}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+                  title="Editar Configurações"
                 >
+                  <span className="material-icons-outlined text-lg">edit</span>
                   Editar
                 </button>
                 <button
                   onClick={() => handleDelete(agent.id)}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
+                  title="Excluir Agente"
                 >
+                  <span className="material-icons-outlined text-lg">delete</span>
                   Excluir
                 </button>
               </div>
@@ -614,6 +689,18 @@ const AgentsControlPage: React.FC = () => {
           aiProvider={chatOpenAgent.aiProvider}
           aiModel={chatOpenAgent.aiModel}
           systemPrompt={chatOpenAgent.systemPrompt}
+          fallbackPrompt={chatOpenAgent.fallbackPrompt}
+        />
+      )}
+
+      {showBuilderModal && builderAgent && (
+        <AgentBuilderModal
+          agent={builderAgent}
+          onSave={handleSaveBuilder}
+          onClose={() => {
+            setShowBuilderModal(false);
+            setBuilderAgent(null);
+          }}
         />
       )}
     </div>

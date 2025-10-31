@@ -1,0 +1,122 @@
+/* Estilos para o Editor Inline */
+
+/* Prevenir que o editor afete o layout */
+.inline-editor-toggle,
+.inline-editor-overlay,
+.style-panel {
+    position: fixed !important;
+    box-sizing: border-box;
+    pointer-events: auto;
+}
+
+[data-editing-mode="true"] {
+    /* Não alterar o layout */
+    position: relative !important;
+}
+
+[data-editing-mode="true"] * {
+    cursor: crosshair !important;
+}
+
+[data-editing-mode="true"] [contenteditable="true"] {
+    cursor: text !important;
+    outline: 2px dashed #38ff81 !important;
+    outline-offset: 2px !important;
+    position: relative;
+    /* Isolar mudanças de estilo apenas no elemento editado */
+    isolation: isolate;
+}
+
+[data-editing-mode="true"] [contenteditable="true"]:hover {
+    outline-color: #2dd975 !important;
+    background-color: rgba(56, 255, 129, 0.05) !important;
+}
+
+/* Garantir que o overlay não interfira */
+.inline-editor-overlay {
+    pointer-events: none !important;
+    z-index: 9998 !important;
+}
+
+.inline-editor-toggle {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.inline-editor-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+}
+
+.inline-editor-toggle:active {
+    transform: scale(0.95);
+}
+
+.style-panel {
+    animation: slideIn 0.2s ease-out;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.style-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.style-panel::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.style-panel::-webkit-scrollbar-thumb {
+    background: rgba(56, 255, 129, 0.3);
+    border-radius: 10px;
+}
+
+.style-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(56, 255, 129, 0.5);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Destaque visual para elementos editáveis */
+[data-editing-mode="true"] *:hover {
+    position: relative;
+}
+
+[data-editing-mode="true"] *:hover::before {
+    content: '✎ Editar';
+    position: absolute;
+    top: -24px;
+    left: 0;
+    background: #38ff81;
+    color: #02281a;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    z-index: 10000;
+    pointer-events: none;
+    animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+

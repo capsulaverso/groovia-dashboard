@@ -21,6 +21,16 @@ export const users = pgTable('users', {
   password: text('password').notNull(),
   role: text('role').notNull().default('user'),
   avatar: text('avatar'),
+  // Dados Pessoais
+  phone: text('phone'),
+  cpf: text('cpf'),
+  hashIdentifier: text('hash_identifier').unique(),
+  slug: text('slug').unique(),
+  // Dados Jurídicos
+  legalName: text('legal_name'),
+  cnpj: text('cnpj'),
+  fiscalAddress: text('fiscal_address'),
+  companyType: text('company_type'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -38,11 +48,17 @@ export const agents = pgTable('agents', {
   allowedAgentIds: jsonb('allowed_agent_ids').default('[]'),
   capabilities: jsonb('capabilities').default('{}'),
   integrations: jsonb('integrations').notNull().default('[]'),
+  skillsConfig: jsonb('skills_config').default('{}'), // configuração de skills do Agent Builder
+  workflowConfig: jsonb('workflow_config').default('{}'), // configuração de fluxo lógico
+  contextConfig: jsonb('context_config').default('{}'), // configuração de contexto e persistência
+  uiConfig: jsonb('ui_config').default('{}'), // configuração de interface (card/chat/modal)
   isActive: boolean('is_active').notNull().default(true),
   aiModel: text('ai_model').default('gpt-4o-mini'),
   aiProvider: text('ai_provider').default('replit'),
   systemPrompt: text('system_prompt').default('Você é um assistente inteligente e prestativo.'),
   fallbackPrompt: text('fallback_prompt').default('Desculpe, houve um erro ao processar sua solicitação. Por favor, tente novamente.'),
+  knowledgeBase: text('knowledge_base'), // link/base de conhecimento do agente
+  promptUrl: text('prompt_url'), // URL do prompt específico do agente
   webhookUrl: text('webhook_url'),
   webhookEnabled: boolean('webhook_enabled').notNull().default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -298,6 +314,73 @@ export const chatSessionsRelations = relations(chatSessions, ({ one }) => ({
   }),
 }));
 
+// Tabela de Páginas (Page Builder)
+export const pages = pgTable('pages', {
+  id: serial('id').primaryKey(),
+  clientId: integer('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  pageKey: text('page_key').notNull(), // slug da página
+  name: text('name').notNull(),
+  description: text('description'),
+  publishedVersionId: integer('published_version_id'), // FK para page_versions
+  createdBy: integer('created_by').references(() => users.id, { onDelete: 'set null' }),
+  updatedBy: integer('updated_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  pageKeyUnique: unique().on(table.clientId, table.pageKey), // slug único por cliente
+}));
+
+// Tabela de Versões de Páginas
+export const pageVersions = pgTable('page_versions', {
+  id: serial('id').primaryKey(),
+  pageId: integer('page_id').notNull().references(() => pages.id, { onDelete: 'cascade' }),
+  clientId: integer('client_id').notNull().references(() => clients.id, { onDelete: 'cascade' }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'set null' }),
+  version: integer('version').notNull(),
+  status: text('status').notNull().default('draft'), // 'draft' | 'published'
+  note: text('note'),
+  content: jsonb('content'), // JSON do GrapesJS (projectData)
+  html: text('html'),
+  css: text('css'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  publishedAt: timestamp('published_at'),
+});
+
+export const pagesRelations = relations(pages, ({ one, many }) => ({
+  client: one(clients, {
+    fields: [pages.clientId],
+    references: [clients.id],
+  }),
+  createdByUser: one(users, {
+    fields: [pages.createdBy],
+    references: [users.id],
+  }),
+  updatedByUser: one(users, {
+    fields: [pages.updatedBy],
+    references: [users.id],
+  }),
+  publishedVersion: one(pageVersions, {
+    fields: [pages.publishedVersionId],
+    references: [pageVersions.id],
+  }),
+  versions: many(pageVersions),
+}));
+
+export const pageVersionsRelations = relations(pageVersions, ({ one }) => ({
+  page: one(pages, {
+    fields: [pageVersions.pageId],
+    references: [pages.id],
+  }),
+  client: one(clients, {
+    fields: [pageVersions.clientId],
+    references: [clients.id],
+  }),
+  user: one(users, {
+    fields: [pageVersions.userId],
+    references: [users.id],
+  }),
+}));
+
 // Tipos TypeScript
 export type Client = typeof clients.$inferSelect;
 export type InsertClient = typeof clients.$inferInsert;
@@ -331,3 +414,9 @@ export type InsertAgentMessage = typeof agentMessages.$inferInsert;
 
 export type ChatSession = typeof chatSessions.$inferSelect;
 export type InsertChatSession = typeof chatSessions.$inferInsert;
+
+export type Page = typeof pages.$inferSelect;
+export type InsertPage = typeof pages.$inferInsert;
+
+export type PageVersion = typeof pageVersions.$inferSelect;
+export type InsertPageVersion = typeof pageVersions.$inferInsert;
