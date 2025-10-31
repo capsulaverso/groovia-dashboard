@@ -79,7 +79,7 @@ const AdminPagesPanel: React.FC = () => {
         try {
             setLoading(true);
             setError(null);
-            const response = await apiClient.get<PageListResponse>('/pages');
+            const response = await apiClient.get<PageListResponse>(`/pages?userId=${user?.id}&clientId=${user?.clientId || 1}`);
             setPages(response.pages || []);
         } catch (err) {
             console.error('Erro ao buscar páginas:', err);
@@ -124,7 +124,7 @@ const AdminPagesPanel: React.FC = () => {
                 pageKey: normalizedSlug,
                 description: descriptionInput.trim() || undefined,
             };
-            await apiClient.post<PageListResponse>('/pages', payload);
+            await apiClient.post<PageListResponse>(`/pages?userId=${user?.id}&clientId=${user?.clientId || 1}`, payload);
             setShowModal(false);
             await fetchPages();
             window.location.href = `/?page=${normalizedSlug}`;
@@ -153,7 +153,7 @@ const AdminPagesPanel: React.FC = () => {
         }
 
         try {
-            const payload = await apiClient.get<PageResponsePayload>(`/pages/${slug}`);
+            const payload = await apiClient.get<PageResponsePayload>(`/pages/${slug}?userId=${user?.id}&clientId=${user?.clientId || 1}`);
             setVersionsCache(prev => ({ ...prev, [slug]: payload.versions || [] }));
         } catch (err) {
             console.error('Erro ao carregar versões:', err);

@@ -110,9 +110,9 @@ const NotificationsPanel: React.FC = () => {
     };
 
     return (
-        <div className="w-80 bg-[#0F0F0F] border-l border-[#2A2A2A] flex flex-col" style={{ fontFamily: 'Poppins, sans-serif' }}>
+        <div className="w-full max-w-xs sm:w-80 bg-[#0F0F0F] border-l border-[#2A2A2A] flex flex-col min-w-0" style={{ fontFamily: 'Poppins, sans-serif' }}>
             {/* Header */}
-            <div className="p-6 border-b border-[#2A2A2A]">
+            <div className="p-4 sm:p-6 border-b border-[#2A2A2A]">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-medium text-white">Notificações</h2>
                     {unreadCount > 0 && (
@@ -139,28 +139,28 @@ const NotificationsPanel: React.FC = () => {
             {/* Lista de Notificações */}
             <div className="flex-1 overflow-y-auto">
                 {filteredNotifications.length === 0 ? (
-                    <div className="p-6 text-center text-[#B0B0B0]">
-                        <span className="material-icons-outlined text-5xl mb-4 block opacity-50">notifications_none</span>
+                    <div className="p-4 sm:p-6 text-center text-[#B0B0B0]">
+                        <span className="material-icons-outlined text-4xl sm:text-5xl mb-4 block opacity-50">notifications_none</span>
                         <p>Nenhuma notificação</p>
                     </div>
                 ) : (
-                    <div className="p-3 space-y-3">
+                    <div className="p-2 sm:p-3 space-y-2 sm:space-y-3">
                         {filteredNotifications.map(notification => (
                             <div
                                 key={notification.id}
-                                className={`p-5 rounded-lg border transition-all ${
+                                className={`p-4 sm:p-5 rounded-lg border transition-all ${
                                     notification.status === 'new'
                                         ? 'bg-[#1E1E1E] border-[#00FFB2]'
                                         : 'bg-[#1E1E1E] border-[#2A2A2A]'
                                 }`}
                             >
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className="flex items-center gap-2">
+                                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
+                                    <div className="flex items-center gap-2 min-w-0">
                                         <div
                                             className="w-2 h-2 rounded-full"
                                             style={{ backgroundColor: getTypeColor(notification.type) }}
                                         />
-                                        <h3 className="text-base font-medium text-white">{notification.title}</h3>
+                                        <h3 className="text-sm sm:text-base font-medium text-white truncate">{notification.title}</h3>
                                     </div>
                                     {notification.status === 'new' && (
                                         <button
@@ -173,11 +173,11 @@ const NotificationsPanel: React.FC = () => {
                                     )}
                                 </div>
                                 
-                                <p className="text-sm text-[#B0B0B0] leading-relaxed mb-3">
+                                <p className="text-xs sm:text-sm text-[#B0B0B0] leading-relaxed mb-3">
                                     {notification.description}
                                 </p>
                                 
-                                <div className="flex items-center justify-between">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                                     <span className="text-xs text-[#B0B0B0]">
                                         {formatTimestamp(notification.timestamp)}
                                     </span>
@@ -194,7 +194,7 @@ const NotificationsPanel: React.FC = () => {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-[#2A2A2A]">
+            <div className="p-3 sm:p-4 border-t border-[#2A2A2A]">
                 <button className="text-xs text-[#B0B0B0] hover:text-[#FFFFFF] transition-colors">
                     Marcar todas como lidas
                 </button>
