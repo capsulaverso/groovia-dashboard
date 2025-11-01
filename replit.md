@@ -1,0 +1,149 @@
+# Overview
+
+Groovia Dashboard is a modern, responsive dashboard application built with React, TypeScript, and Vite. It serves as a strategic business intelligence platform for managing AI-powered analysis agents and workflow plugins, featuring a card-based UI with comprehensive light/dark theme support. The project aims to provide a robust and intuitive platform for users to interact with and manage various AI capabilities.
+
+# User Preferences
+
+Preferred communication style: Simple, everyday language.
+Preferred language: Portuguese (PT-BR).
+Default theme: Light mode (tema claro).
+
+# System Architecture
+
+## Backend Architecture
+
+**Database:** PostgreSQL 16 (Neon-backed) with Drizzle ORM for type-safe operations.
+**API:** Express.js RESTful API handling CRUD for users, agents, documents, conversations, and messages.
+**Security:** bcryptjs for password hashing, environment-based credentials.
+**Schema:** Multi-tenant architecture with `clients` table and clientId in all relevant tables. Includes `users` (auth, roles), `agents` (AI agent configs with behaviorType, communication settings), `documents` (LGPD compliant), `conversations`, `messages` (with messageType and metadata for rich content), `integrations` (N8N, Langchain, Dify support), `agent_conversations` and `agent_messages` (inter-agent communication), and `userProgress`.
+**AI Integration:** Multi-provider AI system (Groovia Intelligence Nativo 1.0, OpenAI, Groq) with intelligent caching, webhook support, and fallback mechanisms.
+**AI Service:** `server/aiService.ts` - Centralized AI service with node-cache (1h TTL), webhook-first execution, and comprehensive error handling.
+
+## Frontend Architecture
+
+**Framework:** React 19.2.0 with TypeScript, Vite 6.2.0.
+**Styling:** Tailwind CSS (CDN), Material Icons (CDN), Poppins font.
+**Component Architecture:** Modular, component-based with clear separation of concerns.
+- **Dashboard Components:** `App.tsx` (routing), `Sidebar` (adaptive navigation), `MainContent` (dashboard home), `RightAside` (contextual help), `ScanCard`, `ProgressRing`, `InfoItem`, `InstructionBox`, `FloatingTooltip`, `AgentCard`, `UserMenu`.
+- **Content Pages:** `DocumentsPage`, `MyAgentsPage`, `ProfilePage`, informational pages (`DocsPage`, `PrivacyPage`, `EULAPage`), and admin pages (`UsersManagementPage`, `ReportsPage`, `AgentsControlPage`).
+- **Agent Workspace System:** Dedicated full-page interface with `AgentWorkspace` (three-panel layout), `WorkspaceLeftSidebar` (conversation history), `WorkspaceChatArea` (central chat with markdown and rich message components), `WorkspaceRightSidebar` (documents/help).
+- **Message Components:** Reusable message renderers for different response types: `MessageRenderer` (orchestrator), `TextMessage`, `ChartMessage`, `DocumentMessage`, `LinkMessage`, `ApprovalMessage` (with multilingual detection).
+**State Management:** Custom React hooks (`useTheme`, `useUser`, `useUserProgress`, `useTooltipPositioning`, `useApi`) for cross-cutting concerns and `localStorage` for persistence.
+**Design Patterns:** Composition, custom hooks, props-based communication, Presentational/Container components.
+**Styling Strategy:** Tailwind CSS with dark mode support and custom color palette.
+**Type System:** TypeScript interfaces defined in `types.ts` for dashboard and workspace entities.
+**Administrative Features:** 
+- Agent management (CRUD, enable/disable, test functionality)
+- AI Configuration (provider, model, system prompt, fallback prompt)
+- Multi-tenant controls (clientId, agent isolation per client)
+- Behavior type management (autonomous vs interagent agents)
+- Inter-agent communication settings (allowed agents, capabilities)
+- Integration support (WebHook with fallback, N8N, LangChain, Dify)
+- Real-time agent testing with detailed metrics (latency, tokens, cache status)
+- Statistics and cache management
+**Data Architecture:** Static constants (`constants.ts`), `getAgentWorkspaceConfig()` factory for dynamic agent configurations, and example conversation system for demonstration.
+
+## Build and Development
+
+**Build Configuration:** Vite with path aliases, environment variable injection, and React plugin.
+**TypeScript Configuration:** ES2022 target, bundler module resolution, JSX transform.
+**Development Workflow:** HMR, preview mode, Vercel-optimized deployment (now Replit).
+
+## Theme System
+
+**Implementation:** `useTheme` hook with localStorage persistence, system preference detection, and default light mode.
+**Mechanism:** Toggles `dark` class on document root, leverages Tailwind's dark mode variants.
+**Color Palette:** Custom primary (purple), surface, and on-surface colors.
+
+# Recent Changes (October 28, 2025)
+
+## API Connectivity Fix (COMPLETE ✅)
+- **Problem**: Frontend não conseguia se conectar ao backend PostgreSQL para salvar agentes
+- **Root Cause**: Navegador bloqueava acesso direto à porta 3001 (API Server)
+- **Solution**: 
+  - Configurado proxy do Vite (`vite.config.ts`) para redirecionar `/api` → `http://localhost:3001`
+  - Simplificado `useApi.ts` para usar endpoint relativo `/api`
+  - Adicionado validação para endpoints vazios (evita requisições 404)
+- **Result**: Frontend e backend totalmente conectados via proxy
+
+## AI Agent Testing System (COMPLETE ✅)
+- **Database Schema Updates**: Added AI configuration fields to agents table (ai_model, ai_provider, system_prompt, fallback_prompt, webhook_url, webhook_enabled)
+- **AI Service Implementation**: Multi-provider support (Groovia Intelligence Nativo 1.0, OpenAI, Groq) with intelligent caching and webhook integration
+- **API Endpoints**: `/api/agents/test`, `/api/cache/stats`, `/api/cache` (DELETE)
+- **Admin Interface**: Complete agent management UI with test button, detailed result panels showing latency, tokens, cache status
+- **Integration**: Groovia Intelligence Nativo 1.0 (IA nativa do sistema, sem necessidade de API key externa)
+- **Testing**: Manual validation completed - 2.8s response time, 255 tokens, full functionality verified
+
+## Responsive Pagination System (COMPLETE ✅)
+- **Dynamic Card Display**: Adjusted cards per page based on screen resolution (1-6 cards)
+- **Backend Integration**: Cards now populate from PostgreSQL via `/api/agents` endpoint
+- **Pagination Controls**: Numbered page buttons with Previous/Next navigation
+- **Smart Page Clamping**: Automatically adjusts current page when screen resizes or data changes
+- **Empty States**: Proper handling when no active agents available
+- **Performance**: Memoized calculations and optimized rendering
+
+## ScanCard Typography & Responsiveness (COMPLETE ✅)
+- **Typography System**: 
+  - Titles: Poppins 18px Bold (line-clamp-2 para limitar em 2 linhas)
+  - Description: Poppins 14px Regular (line-clamp-3 para limitar em 3 linhas)
+- **Layout Improvements**:
+  - Min-height: 280px para consistência visual
+  - Flex layout com mt-auto para alinhar conteúdo ao final
+  - Transições suaves nas barras de progresso
+- **Responsive Grid Updates**:
+  - Mobile (1 col) → Small (2 cols) → Large (3 cols) → XL (4 cols) → 2XL (6 cols)
+  - Breakpoints otimizados para melhor uso do espaço em telas grandes
+- **Data Type Fix**: Integrations field now properly accepts JSON objects from database
+
+## Multi-Tenant Platform with Inter-Agent Communication (COMPLETE ✅)
+- **Database Schema**: 
+  - Added `clients` table for multi-tenancy isolation
+  - Extended all tables with `clientId` foreign keys
+  - Added agent behavior fields: `behaviorType` (autonomous/interagent), `canCommunicateWithAgents`, `allowedAgentIds`, `capabilities`
+  - Created `integrations` table (N8N, Langchain, Dify, webhook support per client)
+  - Created `agent_conversations` and `agent_messages` for inter-agent communication
+  - Extended messages with `messageType` and `metadata` for rich content
+- **Security**: ALL API endpoints enforce clientId validation from headers/query only (no request body) - zero cross-tenant data leakage
+- **Storage Layer**: Complete CRUD methods for clients, integrations, agent communication with ownership validation
+- **AI Service**: Extended with integration support (N8N, Dify, Langchain) and agent-to-agent routing
+- **Message Components**: 
+  - `MessageRenderer` - orchestrates all message types
+  - `TextMessage` - markdown support with dark mode
+  - `ChartMessage` - data visualization placeholder
+  - `DocumentMessage` - document preview with download
+  - `LinkMessage` - URL previews with icons
+  - `ApprovalMessage` - approval workflows with multilingual detection (EN/PT)
+- **AgentsControlPage Updates**:
+  - Interface updated with clientId, behaviorType, communication settings, capabilities
+  - Modal expanded with "Comportamento e Comunicação" section
+  - Visual badges for behavior type and communication status
+  - Conditional fields (allowedAgentIds only when communication enabled)
+  - **PARTIAL**: Missing integrations management UI and inter-agent communication testing interface
+
+# External Dependencies
+
+## NPM Packages
+
+**Production:** `react`, `react-dom`, `openai`, `groq-sdk`, `node-cache`, `express`, `cors`, `bcryptjs`, `drizzle-orm`, `pg`.
+**Development:** `@vitejs/plugin-react`, `typescript`, `@types/node`, `vite`, `drizzle-kit`, `tsx`.
+
+## CDN Resources
+
+**Styling:** Tailwind CSS.
+**Fonts:** Google Fonts - Poppins, Material Icons Outlined.
+**JavaScript:** React and React DOM via `aistudiocdn.com`.
+
+## Third-Party Services
+
+**AI Providers:** 
+- Groovia Intelligence Nativo 1.0 (IA nativa do sistema, sem necessidade de API key externa)
+- OpenAI (opcional, requer OPENAI_API_KEY)
+- Groq (opcional, requer GROQ_API_KEY)
+**API Integration:** Google Drive, Google Slides, Custom WebHooks.
+**Deployment:** Replit.
+**Cache:** node-cache for AI response caching (reduces costs and latency).
+
+## Development Tools
+
+**Claude AI Workflow:** `.claude/` directory for AI-assisted, spec-driven development (requirements, design, tasks, implementation, testing, judging).
+**Agent System:** Specialized agents for different development phases (`spec-requirements`, `spec-design`, `spec-tasks`, `spec-impl`, `spec-test`, `spec-judge`).

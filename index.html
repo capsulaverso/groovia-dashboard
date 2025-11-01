@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Groovia Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -25,7 +25,18 @@
                         "on-surface-secondary-dark": "#9CA3B0",
                     },
                     fontFamily: {
+                        sans: ["Poppins", "sans-serif"],
                         display: ["Poppins", "sans-serif"],
+                    },
+                    fontSize: {
+                        'title': ['18px', {
+                            fontWeight: '700',
+                            lineHeight: '1.4',
+                        }],
+                        'body': ['14px', {
+                            fontWeight: '300',
+                            lineHeight: '1.5',
+                        }],
                     },
                     borderRadius: {
                         DEFAULT: "1rem",
@@ -41,6 +52,21 @@
             transform: rotate(-90deg);
             transform-origin: 50% 50%;
         }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.2s ease-out;
+        }
     </style>
 <script type="importmap">
 {
@@ -52,6 +78,7 @@
 }
 </script>
 <link rel="stylesheet" href="/index.css">
+<link rel="stylesheet" href="/design-system.css">
 </head>
 <body class="font-display bg-background-light dark:bg-background-dark text-on-surface-light dark:text-on-surface-dark">
     <div id="root"></div>

@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Configuração Global de Fonte - Poppins Light 14px */
+@layer base {
+  * {
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+  }
+  
+  /* Títulos usam pesos maiores */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+  }
+  
+  /* Botões e elementos interativos */
+  button, a {
+    font-weight: 400;
+  }
+  
+  /* Labels e texto pequeno */
+  label, .text-xs {
+    font-size: 12px;
+    font-weight: 300;
+  }
+  
+  /* Classe utilitária para tela de exibição */
+  .font-display {
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
+/* Animação do efeito shimmer (luz passando) */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) skewX(-15deg);
+  }
+  100% {
+    transform: translateX(200%) skewX(-15deg);
+  }
+}
+
+/* Garantir que a animação funcione */
+.animate-shimmer {
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+/* Animações customizadas */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.6s ease-out forwards;
+}
+

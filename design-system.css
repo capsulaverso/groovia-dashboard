@@ -1,0 +1,108 @@
+/* Design System Global - Padrão Inegociável */
+
+/* ============================================
+   TIPOGRAFIA
+   ============================================ */
+
+/* Classe para TÍTULOS - 18px, Poppins Bold */
+.text-title {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.4;
+}
+
+/* Classe para CORPO DE TEXTO - 14px, Poppins Light */
+.text-body {
+    font-size: 14px;
+    font-weight: 300;
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.5;
+}
+
+/* ============================================
+   UTILITÁRIOS TYPOGRAPHY
+   ============================================ */
+
+/* Títulos em diferentes níveis */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+h1 { font-size: 18px; }
+h2 { font-size: 18px; }
+h3 { font-size: 18px; }
+h4 { font-size: 18px; }
+h5 { font-size: 18px; }
+h6 { font-size: 18px; }
+
+/* Parágrafos e textos normais */
+p, span, div, a, button, input, textarea, select, label {
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.5;
+}
+
+/* ============================================
+   CLASSES UTILITÁRIAS
+   ============================================ */
+
+/* Aplicação global de fonte */
+* {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Correção para elementos inline */
+.inline-text {
+    font-size: 14px;
+    font-weight: 300;
+}
+
+/* ============================================
+   OVERRIDES ESPECÍFICOS PARA COMPONENTES
+   ============================================ */
+
+/* Títulos em cards e componentes */
+.card-title,
+.component-title,
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* Descrições e textos secundários */
+.card-description,
+.component-description,
+.body-text {
+    font-size: 14px;
+    font-weight: 300;
+}
+
+/* ============================================
+   RESPONSIVE (mantém padrão)
+   ============================================ */
+
+/* O padrão é mantido em todas as telas */
+@media (max-width: 768px) {
+    .text-title,
+    .card-title,
+    .component-title,
+    .section-title,
+    h1, h2, h3, h4, h5, h6 {
+        font-size: 18px;
+        font-weight: 700;
+    }
+    
+    .text-body,
+    .card-description,
+    .component-description,
+    .body-text,
+    p, span, div, a, button, input {
+        font-size: 14px;
+        font-weight: 300;
+    }
+}
+
